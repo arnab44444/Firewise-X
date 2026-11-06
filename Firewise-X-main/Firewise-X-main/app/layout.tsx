@@ -1,5 +1,12 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import "./globals.css";
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 5,
+  themeColor: "#060b17",
+};
 
 export const metadata: Metadata = {
   title: "FIREWISE-X | NASA Space Apps Challenge 2026",
@@ -12,8 +19,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className="h-full antialiased dark">
-      <body className="min-h-full flex flex-col bg-[#070d19] text-[#e8edf7]">{children}</body>
+    <html lang="en" className="dark">
+      <body>{children}</body>
     </html>
   );
 }
