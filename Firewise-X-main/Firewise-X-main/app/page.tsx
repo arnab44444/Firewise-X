@@ -117,7 +117,7 @@ export default function FirewiseXApp() {
   // Helper: Threat Percentage (0 - 1000 ppm mapped to 0 - 100%)
   const threatPercent = useMemo(() => {
     const val = currentHero.final_co_ppm || 0;
-    return Math.min(100, Math.max(5, (val / 1000) * 100));
+    return Math.min(94, Math.max(6, (val / 1000) * 100));
   }, [currentHero]);
 
   // =========================================================
@@ -140,8 +140,9 @@ export default function FirewiseXApp() {
     const n = times.length;
     if (n < 2) return;
 
-    const padL = 60;
-    const padR = 60;
+    const isMobile = rect.width < 520;
+    const padL = isMobile ? 38 : 60;
+    const padR = isMobile ? 38 : 60;
     const padT = 36;
     const padB = 44;
     const chartW = Math.max(10, rect.width - padL - padR);
@@ -344,8 +345,9 @@ export default function FirewiseXApp() {
     if (!cv) return;
     const rect = cv.getBoundingClientRect();
     const x = e.clientX - rect.left;
-    const padL = 60;
-    const padR = 60;
+    const isMobile = rect.width < 520;
+    const padL = isMobile ? 38 : 60;
+    const padR = isMobile ? 38 : 60;
     const chartW = rect.width - padL - padR;
     if (x < padL || x > padL + chartW) {
       setHoveredTime(null);
@@ -1286,18 +1288,18 @@ export default function FirewiseXApp() {
 
               {/* Dynamic Toxicity Threat Meter / Gauge */}
               <div style={{ marginTop: "16px", paddingTop: "14px", borderTop: "1px solid var(--bd)" }}>
-                <div className="row-between" style={{ fontSize: "0.82rem" }}>
-                  <span style={{ fontWeight: 700, color: "var(--tx-bright)" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "8px", flexWrap: "wrap", marginBottom: "4px", fontSize: "0.82rem" }}>
+                  <span style={{ fontWeight: 700, color: "var(--tx-bright)", flex: "1 1 200px" }}>
                     🚨 Glovebox Atmosphere CO Concentration & Toxicity Scale:
                   </span>
-                  <span style={{ fontWeight: 800, color: currentHero.final_co_ppm >= 500 ? "var(--danger)" : currentHero.final_co_ppm >= 200 ? "var(--am)" : "var(--ok)" }}>
+                  <span style={{ fontWeight: 800, color: currentHero.final_co_ppm >= 500 ? "var(--danger)" : currentHero.final_co_ppm >= 200 ? "var(--am)" : "var(--ok)", whiteSpace: "normal", wordBreak: "break-word" }}>
                     {currentHero.co_qualifier || `Peak ${currentHero.final_co_ppm} ppm`} ({currentHero.co_danger})
                   </span>
                 </div>
                 <div className="threat-meter">
                   <div className="threat-pointer" style={{ left: `${threatPercent}%` }}></div>
                 </div>
-                <div className="row-between" style={{ fontSize: "0.74rem", color: "var(--mu)" }}>
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(125px, 1fr))", gap: "6px", fontSize: "0.74rem", color: "var(--mu)", marginTop: "6px" }}>
                   <span>🟢 Low (&lt;50 ppm)</span>
                   <span>🟡 Moderate (50-200 ppm)</span>
                   <span>🟠 High (200-500 ppm)</span>
@@ -1308,11 +1310,11 @@ export default function FirewiseXApp() {
 
             {showHowToUse && (
               <div className="callout-box">
-                <div className="row-between">
+                <div className="row-between" style={{ gap: "6px" }}>
                   <h4 style={{ margin: "0 0 6px", color: "var(--cy)" }}>💡 How to Read This Dashboard (সহজে বুঝুন)</h4>
-                  <span className="tag tag-cyan">Quick Guide</span>
+                  <span className="tag tag-cyan" style={{ width: "fit-content" }}>Quick Guide</span>
                 </div>
-                <p className="mu" style={{ margin: 0, lineHeight: 1.6 }}>
+                <p className="mu" style={{ margin: 0, lineHeight: 1.6, wordBreak: "break-word" }}>
                   <b>1) Ground Truth Endpoints:</b> NASA/TM-20210011385 recorded discrete sensor endpoints before ignition and after extinction in the MSG.<br />
                   <b>2) Telemetry Curve:</b> Continuous curves are derived illustrative interpolations between the verified endpoints (Orange: CO ppm, Cyan: O₂ %).<br />
                   <b>3) Glovebox vs Cabin:</b> Measurements reflect concentration inside the sealed Microgravity Science Glovebox, not uncontained astronaut cabin exposure.
@@ -1324,44 +1326,44 @@ export default function FirewiseXApp() {
             <div className="g-2">
               {/* Left Column: Metadata */}
               <div className="c">
-                <div className="row-between" style={{ marginBottom: "10px" }}>
+                <div className="row-between" style={{ marginBottom: "10px", gap: "6px" }}>
                   <span className="tag tag-cyan">Test ID: {currentHero.test_id}</span>
                   <span className="tag tag-amber">GMT Day: {currentHero.gmt}</span>
                 </div>
-                <h2 style={{ fontSize: "1.2rem", lineHeight: 1.3 }}>{currentHero.title}</h2>
+                <h2 style={{ fontSize: "1.2rem", lineHeight: 1.3, wordBreak: "break-word" }}>{currentHero.title}</h2>
 
                 {/* Verified NASA Ground-Truth Sensor Endpoints */}
                 <div style={{ background: "rgba(5, 10, 20, 0.75)", border: "1px solid var(--bd)", borderRadius: "10px", padding: "12px", margin: "12px 0" }}>
-                  <div className="row-between" style={{ marginBottom: "6px" }}>
+                  <div className="row-between" style={{ marginBottom: "6px", gap: "6px" }}>
                     <b style={{ color: "var(--cy)", fontSize: "0.85rem" }}>📌 Verified NASA Sensor Endpoints</b>
-                    <span className="tag tag-amber">{currentHero.source_table || "NASA/TM-20210011385"}</span>
+                    <span className="tag tag-amber" style={{ whiteSpace: "normal", wordBreak: "break-word" }}>{currentHero.source_table || "NASA/TM-20210011385"}</span>
                   </div>
-                  <div style={{ fontSize: "0.82rem", display: "flex", flexDirection: "column", gap: "4px" }}>
-                    <div className="row-between">
+                  <div style={{ fontSize: "0.82rem", display: "flex", flexDirection: "column", gap: "6px" }}>
+                    <div className="row-between" style={{ gap: "4px" }}>
                       <span className="mu">Chamber:</span>
-                      <span style={{ color: "#d2dff5" }}>Microgravity Science Glovebox (MSG)</span>
+                      <span style={{ color: "#d2dff5", wordBreak: "break-word" }}>Microgravity Science Glovebox (MSG)</span>
                     </div>
-                    <div className="row-between">
+                    <div className="row-between" style={{ gap: "4px" }}>
                       <span className="mu">O₂ (Before → After):</span>
-                      <span style={{ color: "var(--ok)", fontWeight: 700 }}>{currentHero.initial_o2}% → {currentHero.final_o2}% (Δ {(currentHero.initial_o2 - currentHero.final_o2).toFixed(2)}%)</span>
+                      <span style={{ color: "var(--ok)", fontWeight: 700, wordBreak: "break-word" }}>{currentHero.initial_o2}% → {currentHero.final_o2}% (Δ {(currentHero.initial_o2 - currentHero.final_o2).toFixed(2)}%)</span>
                     </div>
-                    <div className="row-between">
+                    <div className="row-between" style={{ gap: "4px" }}>
                       <span className="mu">CO (Before → After):</span>
-                      <b style={{ color: currentHero.final_co_ppm >= 500 ? "var(--danger)" : "var(--am)" }}>
+                      <b style={{ color: currentHero.final_co_ppm >= 500 ? "var(--danger)" : "var(--am)", wordBreak: "break-word" }}>
                         {currentHero.initial_co_ppm} ppm → {currentHero.co_qualifier || `${currentHero.final_co_ppm} ppm`}
                       </b>
                     </div>
-                    <div className="row-between">
+                    <div className="row-between" style={{ gap: "4px" }}>
                       <span className="mu">Flow Direction:</span>
-                      <span>{currentHero.flow_type || "Forced flow"}</span>
+                      <span style={{ wordBreak: "break-word" }}>{currentHero.flow_type || "Forced flow"}</span>
                     </div>
                   </div>
                 </div>
 
-                <table style={{ margin: "12px 0" }}>
+                <table style={{ margin: "12px 0", width: "100%", tableLayout: "auto" }}>
                   <tbody>
-                    <tr><td className="mu">Investigator</td><td><b>{currentHero.pi}</b></td></tr>
-                    <tr><td className="mu">Material</td><td>{currentHero.material}</td></tr>
+                    <tr><td className="mu" style={{ width: "35%", minWidth: "95px" }}>Investigator</td><td style={{ wordBreak: "break-word" }}><b>{currentHero.pi}</b></td></tr>
+                    <tr><td className="mu">Material</td><td style={{ wordBreak: "break-word" }}>{currentHero.material}</td></tr>
                     <tr><td className="mu">Thickness</td><td><b>{currentHero.thickness_mm} mm</b></td></tr>
                     <tr><td className="mu">Forced Airflow</td><td>{currentHero.air_speed_nominal}</td></tr>
                     <tr><td className="mu">Initial O₂ Level</td><td>{currentHero.initial_o2}%</td></tr>
@@ -1369,7 +1371,7 @@ export default function FirewiseXApp() {
                     <tr>
                       <td className="mu">Peak Toxic CO</td>
                       <td>
-                        <span className={currentHero.final_co_ppm >= 500 ? "tag tag-red" : currentHero.final_co_ppm >= 200 ? "tag tag-amber" : "tag tag-green"}>
+                        <span className={currentHero.final_co_ppm >= 500 ? "tag tag-red" : currentHero.final_co_ppm >= 200 ? "tag tag-amber" : "tag tag-green"} style={{ whiteSpace: "normal", wordBreak: "break-word" }}>
                           {currentHero.co_qualifier || `${currentHero.final_co_ppm} ppm`}
                         </span>
                       </td>
