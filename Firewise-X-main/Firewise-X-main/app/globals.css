@@ -762,6 +762,17 @@ button.pill-filter.active {
   box-shadow: 0 0 10px rgba(79, 209, 232, 0.25);
 }
 
+/* Hide Next.js dev indicator badge and portal */
+[data-nextjs-dev-indicator],
+[data-next-badge],
+.nextjs-toast-errors,
+nextjs-portal,
+#nextjs-dev-indicator {
+  display: none !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
+
 /* Form Inputs */
 select, input[type=text], input[type=search], input[type=range] {
   background: #071021;

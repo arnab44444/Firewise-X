@@ -11,6 +11,14 @@ export const viewport: Viewport = {
 export const metadata: Metadata = {
   title: "FIREWISE-X | NASA Space Apps Challenge 2026",
   description: "Evidence-Grounded Research Engine for Microgravity Fire Safety (NASA BASS-II PSI-25)",
+  icons: {
+    icon: [
+      { url: "/icon.svg", type: "image/svg+xml" },
+      { url: "/favicon.ico", sizes: "any" },
+    ],
+    apple: "/icon.svg",
+    shortcut: "/icon.svg",
+  },
 };
 
 export default function RootLayout({

@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0a152e"/>
+      <stop offset="100%" stop-color="#030712"/>
+    </linearGradient>
+    <linearGradient id="flameOuter" x1="0%" y1="100%" x2="0%" y2="0%">
+      <stop offset="0%" stop-color="#ff3838"/>
+      <stop offset="50%" stop-color="#ff9f1a"/>
+      <stop offset="100%" stop-color="#ffd32a"/>
+    </linearGradient>
+    <linearGradient id="flameInner" x1="0%" y1="100%" x2="0%" y2="0%">
+      <stop offset="0%" stop-color="#ff9f1a"/>
+      <stop offset="60%" stop-color="#4fd1e8"/>
+      <stop offset="100%" stop-color="#ffffff"/>
+    </linearGradient>
+    <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="1.5" result="blur"/>
+      <feComposite in="SourceGraphic" in2="blur" operator="over"/>
+    </filter>
+  </defs>
+
+  <!-- Circular Space Badge Background -->
+  <rect width="64" height="64" rx="16" fill="url(#bgGrad)"/>
+  <rect width="64" height="64" rx="16" fill="none" stroke="#4fd1e8" stroke-width="2.5" stroke-opacity="0.6"/>
+
+  <!-- Outer Microgravity Freefall Flame -->
+  <path d="M32 8 C36 17, 49 23, 49 37 C49 47.5, 41.5 55, 32 55 C22.5 55, 15 47.5, 15 37 C15 25, 26 18, 29 15 C28 21, 33 25, 35 23 C37 20, 33 12, 32 8 Z" fill="url(#flameOuter)" filter="url(#glow)"/>
+
+  <!-- Inner High-Temperature Core -->
+  <path d="M32 22 C34 28, 42 32, 42 40 C42 46.5, 37.5 51, 32 51 C26.5 51, 22 46.5, 22 40 C22 33, 28 28, 29 25 C29 29, 32 32, 34 30 C35 28, 33 24, 32 22 Z" fill="url(#flameInner)"/>
+
+  <!-- Spherical Microgravity Hotspot -->
+  <circle cx="32" cy="40" r="3.5" fill="#ffffff" opacity="0.95"/>
+</svg>
