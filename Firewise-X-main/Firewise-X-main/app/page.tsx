@@ -13,6 +13,7 @@ import {
 export default function FirewiseXApp() {
   const [currentRoute, setCurrentRoute] = useState<string>("/");
   const [windowWidth, setWindowWidth] = useState<number>(1200);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState<boolean>(false);
 
   // Mission Control state
   const [selectedHeroIndex, setSelectedHeroIndex] = useState<number>(0);
@@ -71,6 +72,7 @@ export default function FirewiseXApp() {
     const handleHash = () => {
       const h = window.location.hash.replace("#", "") || "/";
       setCurrentRoute(h);
+      setIsMobileMenuOpen(false);
       window.scrollTo(0, 0);
     };
     handleHash();
@@ -78,18 +80,30 @@ export default function FirewiseXApp() {
 
     const handleResize = () => {
       setWindowWidth(window.innerWidth);
+      if (window.innerWidth > 980) {
+        setIsMobileMenuOpen(false);
+      }
     };
     handleResize();
     window.addEventListener("resize", handleResize);
 
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        setIsMobileMenuOpen(false);
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+
     return () => {
       window.removeEventListener("hashchange", handleHash);
       window.removeEventListener("resize", handleResize);
+      window.removeEventListener("keydown", handleKeyDown);
     };
   }, []);
 
   const navigateTo = (path: string) => {
     window.location.hash = `#${path}`;
+    setIsMobileMenuOpen(false);
   };
 
   const currentHero = HERO_RUNS[selectedHeroIndex] || HERO_RUNS[0];
@@ -788,33 +802,120 @@ export default function FirewiseXApp() {
     <>
       {/* Sticky Responsive Header */}
       <nav aria-label="Main Navigation">
-        <div className="brand">
-          <span className="brand-flame">🔥</span> FIREWISE-X
+        <div className="nav-container">
+          <div className="nav-left">
+            <div className="brand" onClick={() => navigateTo("/")}>
+              <span className="brand-flame">🔥</span> FIREWISE-X
+            </div>
+            <span className="brand-badge">NASA PSI-25 · BASS-II</span>
+          </div>
+
+          {/* Desktop Navigation Links */}
+          <div className="nav-links-desktop">
+            <a onClick={() => navigateTo("/")} className={currentRoute === "/" ? "on" : ""}>
+              <span>🏠</span> Home
+            </a>
+            <a onClick={() => navigateTo("/mc")} className={currentRoute === "/mc" ? "on" : ""}>
+              <span>🚀</span> Mission Control
+            </a>
+            <a onClick={() => navigateTo("/exp")} className={currentRoute === "/exp" ? "on" : ""}>
+              <span>📊</span> 129 Tests Explorer
+            </a>
+            <a onClick={() => navigateTo("/flame")} className={currentRoute === "/flame" ? "on" : ""}>
+              <span>🎥</span> Flame Studio (CV)
+            </a>
+            <a onClick={() => navigateTo("/sensor")} className={currentRoute === "/sensor" ? "on" : ""}>
+              <span>📈</span> Sensors & Anomaly
+            </a>
+            <a onClick={() => navigateTo("/evid")} className={currentRoute === "/evid" ? "on" : ""}>
+              <span>📚</span> Evidence Engine
+            </a>
+            <a onClick={() => navigateTo("/cmp")} className={currentRoute === "/cmp" ? "on" : ""}>
+              <span>⚖️</span> Compare Runs
+            </a>
+          </div>
+
+          {/* Mobile Hamburger Toggle Button */}
+          <button
+            className="hamburger-btn"
+            aria-label={isMobileMenuOpen ? "Close navigation menu" : "Open navigation menu"}
+            aria-expanded={isMobileMenuOpen}
+            aria-controls="mobile-nav-menu"
+            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+          >
+            <span className={`hamburger-icon ${isMobileMenuOpen ? "open" : ""}`}>
+              <span></span>
+              <span></span>
+              <span></span>
+            </span>
+          </button>
         </div>
-        <span className="brand-badge">NASA PSI-25 · BASS-II</span>
-        <div className="row" style={{ gap: "4px" }}>
-          <a onClick={() => navigateTo("/")} className={currentRoute === "/" ? "on" : ""}>
-            <span>🏠</span> Home
-          </a>
-          <a onClick={() => navigateTo("/mc")} className={currentRoute === "/mc" ? "on" : ""}>
-            <span>🚀</span> Mission Control
-          </a>
-          <a onClick={() => navigateTo("/exp")} className={currentRoute === "/exp" ? "on" : ""}>
-            <span>📊</span> 129 Tests Explorer
-          </a>
-          <a onClick={() => navigateTo("/flame")} className={currentRoute === "/flame" ? "on" : ""}>
-            <span>🎥</span> Flame Studio (CV)
-          </a>
-          <a onClick={() => navigateTo("/sensor")} className={currentRoute === "/sensor" ? "on" : ""}>
-            <span>📈</span> Sensors & Anomaly
-          </a>
-          <a onClick={() => navigateTo("/evid")} className={currentRoute === "/evid" ? "on" : ""}>
-            <span>📚</span> Evidence Engine
-          </a>
-          <a onClick={() => navigateTo("/cmp")} className={currentRoute === "/cmp" ? "on" : ""}>
-            <span>⚖️</span> Compare Runs
-          </a>
-        </div>
+
+        {/* Mobile Dropdown Drawer Menu */}
+        {isMobileMenuOpen && (
+          <>
+            <div className="mobile-menu-backdrop" onClick={() => setIsMobileMenuOpen(false)} />
+            <div id="mobile-nav-menu" className="mobile-menu-dropdown">
+              <div className="mobile-menu-header">
+                <span className="mu" style={{ fontSize: "0.78rem", fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase" }}>
+                  Navigation Matrix
+                </span>
+                <span className="tag tag-cyan" style={{ fontSize: "0.72rem" }}>NASA BASS-II</span>
+              </div>
+              <div className="mobile-links-list">
+                <a onClick={() => navigateTo("/")} className={`mobile-nav-item ${currentRoute === "/" ? "on" : ""}`}>
+                  <span className="item-icon">🏠</span>
+                  <div className="item-text">
+                    <span className="item-title">Home</span>
+                    <span className="item-desc">Executive summary & mission overview</span>
+                  </div>
+                </a>
+                <a onClick={() => navigateTo("/mc")} className={`mobile-nav-item ${currentRoute === "/mc" ? "on" : ""}`}>
+                  <span className="item-icon">🚀</span>
+                  <div className="item-text">
+                    <span className="item-title">Mission Control</span>
+                    <span className="item-desc">Verified NASA endpoints & telemetry charts</span>
+                  </div>
+                </a>
+                <a onClick={() => navigateTo("/exp")} className={`mobile-nav-item ${currentRoute === "/exp" ? "on" : ""}`}>
+                  <span className="item-icon">📊</span>
+                  <div className="item-text">
+                    <span className="item-title">129 Tests Explorer</span>
+                    <span className="item-desc">Filterable database of all flight runs</span>
+                  </div>
+                </a>
+                <a onClick={() => navigateTo("/flame")} className={`mobile-nav-item ${currentRoute === "/flame" ? "on" : ""}`}>
+                  <span className="item-icon">🎥</span>
+                  <div className="item-text">
+                    <span className="item-title">Flame Studio (CV)</span>
+                    <span className="item-desc">Real ISS video tracking with ROI masking</span>
+                  </div>
+                </a>
+                <a onClick={() => navigateTo("/sensor")} className={`mobile-nav-item ${currentRoute === "/sensor" ? "on" : ""}`}>
+                  <span className="item-icon">📈</span>
+                  <div className="item-text">
+                    <span className="item-title">Sensors & Anomaly</span>
+                    <span className="item-desc">Statistical Z-score & threshold detection</span>
+                  </div>
+                </a>
+                <a onClick={() => navigateTo("/evid")} className={`mobile-nav-item ${currentRoute === "/evid" ? "on" : ""}`}>
+                  <span className="item-icon">📚</span>
+                  <div className="item-text">
+                    <span className="item-title">Evidence Engine</span>
+                    <span className="item-desc">Peer-reviewed literature & NASA TM mapping</span>
+                  </div>
+                </a>
+                <a onClick={() => navigateTo("/cmp")} className={`mobile-nav-item ${currentRoute === "/cmp" ? "on" : ""}`}>
+                  <span className="item-icon">⚖️</span>
+                  <div className="item-text">
+                    <span className="item-title">Compare Runs</span>
+                    <span className="item-desc">Side-by-side fuel & flow regime contrast</span>
+                  </div>
+                </a>
+              </div>
+            </div>
+          </>
+        )}
       </nav>
 
       {/* Main Container */}

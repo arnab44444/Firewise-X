@@ -100,23 +100,30 @@ a:hover {
 nav {
   position: sticky;
   top: 0;
-  z-index: 100;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 10px 18px;
-  background: rgba(6, 11, 23, 0.88);
+  z-index: 1000;
+  background: rgba(6, 11, 23, 0.94);
   border-bottom: 1px solid var(--bd);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.5);
-  overflow-x: auto;
-  white-space: nowrap;
-  scrollbar-width: none;
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.6);
 }
 
-nav::-webkit-scrollbar {
-  display: none;
+.nav-container {
+  width: 100%;
+  max-width: 1240px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 18px;
+  gap: 12px;
+}
+
+.nav-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
 }
 
 nav .brand {
@@ -124,13 +131,15 @@ nav .brand {
   align-items: center;
   gap: 7px;
   font-weight: 800;
-  font-size: 1.12rem;
+  font-size: 1.14rem;
   letter-spacing: 0.06em;
   color: var(--tx-bright);
   padding-right: 12px;
   border-right: 1px solid var(--bd);
   margin-right: 6px;
   flex-shrink: 0;
+  cursor: pointer;
+  user-select: none;
 }
 
 nav .brand-flame {
@@ -154,15 +163,22 @@ nav .brand-badge {
   background: rgba(79, 209, 232, 0.12);
   color: var(--cy);
   border: 1px solid rgba(79, 209, 232, 0.35);
-  margin-right: 8px;
+  white-space: nowrap;
+}
+
+.nav-links-desktop {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  flex-wrap: nowrap;
 }
 
 nav a {
   color: var(--mu);
   text-decoration: none;
-  padding: 7px 13px;
+  padding: 7px 12px;
   border-radius: 8px;
-  font-size: 0.88rem;
+  font-size: 0.86rem;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
@@ -172,6 +188,7 @@ nav a {
   gap: 6px;
   border: 1px solid transparent;
   user-select: none;
+  white-space: nowrap;
 }
 
 nav a:hover:not(.on) {
@@ -185,6 +202,174 @@ nav a.on {
   background: linear-gradient(180deg, rgba(79, 209, 232, 0.22) 0%, rgba(79, 209, 232, 0.08) 100%);
   border: 1px solid rgba(79, 209, 232, 0.5);
   box-shadow: 0 0 14px rgba(79, 209, 232, 0.2);
+}
+
+/* ========================================================= */
+/* HAMBURGER BUTTON & MOBILE DRAWER */
+/* ========================================================= */
+.hamburger-btn {
+  display: none;
+  background: rgba(13, 23, 46, 0.85);
+  border: 1px solid var(--bd);
+  color: var(--tx-bright);
+  padding: 8px;
+  border-radius: 8px;
+  cursor: pointer;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  box-sizing: border-box;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+.hamburger-btn:hover {
+  background: rgba(79, 209, 232, 0.15);
+  border-color: var(--cy);
+  box-shadow: 0 0 10px rgba(79, 209, 232, 0.3);
+}
+
+.hamburger-icon {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  width: 20px;
+  height: 15px;
+  position: relative;
+}
+
+.hamburger-icon span {
+  display: block;
+  width: 100%;
+  height: 2px;
+  background: var(--cy);
+  border-radius: 2px;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  transform-origin: center;
+}
+
+.hamburger-icon.open span:nth-child(1) {
+  transform: translateY(6.5px) rotate(45deg);
+}
+
+.hamburger-icon.open span:nth-child(2) {
+  opacity: 0;
+  transform: scaleX(0);
+}
+
+.hamburger-icon.open span:nth-child(3) {
+  transform: translateY(-6.5px) rotate(-45deg);
+}
+
+/* Mobile Dropdown Backdrop */
+.mobile-menu-backdrop {
+  position: fixed;
+  inset: 0;
+  top: 56px;
+  background: rgba(3, 7, 18, 0.7);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  z-index: 998;
+  animation: fadeIn 0.2s ease-out;
+}
+
+/* Mobile Dropdown Container */
+.mobile-menu-dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: rgba(8, 15, 33, 0.98);
+  border-bottom: 2px solid var(--cy);
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.85);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  padding: 12px 14px 18px;
+  z-index: 999;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-height: calc(100vh - 65px);
+  overflow-y: auto;
+  animation: slideDownNav 0.24s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes slideDownNav {
+  from {
+    opacity: 0;
+    transform: translateY(-12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.mobile-menu-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 4px 6px 10px;
+  border-bottom: 1px solid var(--bd);
+  margin-bottom: 4px;
+}
+
+.mobile-links-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.mobile-nav-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 11px 14px;
+  border-radius: 10px;
+  text-decoration: none;
+  color: var(--tx);
+  background: rgba(13, 23, 46, 0.7);
+  border: 1px solid var(--bd);
+  cursor: pointer;
+  transition: all 0.18s ease;
+  user-select: none;
+}
+
+.mobile-nav-item:hover {
+  background: rgba(79, 209, 232, 0.12);
+  border-color: rgba(79, 209, 232, 0.4);
+  color: var(--tx-bright);
+  transform: translateX(4px);
+}
+
+.mobile-nav-item.on {
+  background: linear-gradient(90deg, rgba(79, 209, 232, 0.22) 0%, rgba(13, 23, 46, 0.85) 100%);
+  border-color: var(--cy);
+  color: var(--tx-bright);
+  box-shadow: 0 0 16px rgba(79, 209, 232, 0.28);
+}
+
+.mobile-nav-item .item-icon {
+  font-size: 1.35rem;
+  flex-shrink: 0;
+}
+
+.mobile-nav-item .item-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.mobile-nav-item .item-title {
+  font-weight: 700;
+  font-size: 0.94rem;
+  color: var(--tx-bright);
+}
+
+.mobile-nav-item .item-desc {
+  font-size: 0.74rem;
+  color: var(--mu);
 }
 
 /* ========================================================= */
@@ -654,25 +839,32 @@ footer {
 /* ========================================================= */
 /* MOBILE & TABLET MEDIA QUERIES */
 /* ========================================================= */
+@media (max-width: 980px) {
+  .nav-links-desktop {
+    display: none !important;
+  }
+  .hamburger-btn {
+    display: inline-flex !important;
+  }
+  nav .brand {
+    border-right: none;
+    padding-right: 0;
+  }
+}
+
 @media (max-width: 768px) {
-  nav {
+  .nav-container {
     padding: 8px 12px;
-    gap: 4px;
   }
 
   nav .brand {
-    font-size: 0.98rem;
-    padding-right: 8px;
-    margin-right: 4px;
+    font-size: 1.02rem;
+    padding-right: 0;
+    margin-right: 0;
   }
 
   nav .brand-badge {
     display: none;
-  }
-
-  nav a {
-    padding: 6px 10px;
-    font-size: 0.82rem;
   }
 
   main {
