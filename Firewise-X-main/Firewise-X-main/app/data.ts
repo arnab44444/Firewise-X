@@ -37,6 +37,7 @@ export interface HeroRun {
   gmt: number;
   date: string;
   flow_restrictor: number;
+  flow_type?: string;
   fan_display: string;
   air_speed_nominal: string;
   initial_o2: number;
@@ -45,6 +46,9 @@ export interface HeroRun {
   final_co2: number;
   initial_co_ppm: number;
   final_co_ppm: number;
+  co_qualifier?: string | null;
+  chamber_location?: string;
+  source_table?: string;
   co_danger: string;
   outcome: string;
   video_url: string | null;
@@ -3448,6 +3452,7 @@ export const HERO_RUNS: HeroRun[] = [
     "gmt": 50,
     "date": "2014-02-19",
     "flow_restrictor": 2,
+    "flow_type": "Opposed flow",
     "fan_display": "62",
     "air_speed_nominal": "5 cm/s",
     "initial_o2": 22.2,
@@ -3456,8 +3461,11 @@ export const HERO_RUNS: HeroRun[] = [
     "final_co2": 0.44,
     "initial_co_ppm": 0.0,
     "final_co_ppm": 6.0,
+    "co_qualifier": null,
+    "chamber_location": "Microgravity Science Glovebox (MSG) - Sealed Chamber",
+    "source_table": "NASA/TM-20210011385 Table A.1, printed p103 / PDF p111",
     "co_danger": "Low (<50 ppm)",
-    "outcome": "Ignition achieved; opposed-flow flame spread observed. Upon flow stoppage, rapid radiative extinction occurred due to lack of buoyancy-driven oxygen replenishment in microgravity.",
+    "outcome": "Ignition achieved; opposed-flow flame spread observed over 100 µm PMMA film (sample 147). Calibrated O₂ remained at 22.2%; CO rose from 0 to 6 ppm in the glovebox. Upon flow stoppage, rapid visible radiative flame extinction occurred due to lack of buoyancy-driven oxygen replenishment in microgravity.",
     "video_url": "/videos/BASS_GMT50_SAMPLE_147_TEST_B1.mp4",
     "has_video": true,
     "telemetry": {
@@ -3574,6 +3582,7 @@ export const HERO_RUNS: HeroRun[] = [
     "gmt": 51,
     "date": "2014-02-20",
     "flow_restrictor": 0,
+    "flow_type": "Unrestricted duct (Flow restrictor: 0)",
     "fan_display": "Variable (20, 13, 10, 8, 5)",
     "air_speed_nominal": "5-20 cm/s",
     "initial_o2": 22.2,
@@ -3581,9 +3590,12 @@ export const HERO_RUNS: HeroRun[] = [
     "initial_co2": 0.44,
     "final_co2": 3.22,
     "initial_co_ppm": 9.0,
-    "final_co_ppm": 550.0,
+    "final_co_ppm": 500.0,
+    "co_qualifier": ">500 ppm (Off-Scale High Censoring)",
+    "chamber_location": "Microgravity Science Glovebox (MSG) - Sealed Chamber",
+    "source_table": "NASA/TM-20210011385 Table A.4, printed p109 / PDF p117",
     "co_danger": "Critical (500+ ppm)",
-    "outcome": "Massive two-sided combustion with intense heat release. Highest oxygen consumption in the dataset (3.2% drop) and toxic CO spike exceeding 500 ppm, demonstrating the extreme fire hazard of intermediate-thickness plastics in spacecraft.",
+    "outcome": "Massive two-sided combustion of 3 mm PMMA slab (sample 167) with intense heat release. Highest oxygen consumption in the dataset (3.2 percentage point drop from 22.2% to 19.0%) and toxic CO exceeded 500 ppm off-scale sensor limit inside the sealed MSG glovebox.",
     "video_url": null,
     "has_video": false,
     "telemetry": {
@@ -3691,14 +3703,15 @@ export const HERO_RUNS: HeroRun[] = [
   {
     "id": "RUN-O13A",
     "test_id": "O13a",
-    "title": "O13a \u2014 1/2\" PMMA Clear Rod High Toxicity Incomplete Combustion",
+    "title": "O13a — 1/2\" PMMA Clear Rod High Toxicity Incomplete Combustion",
     "pi": "Sandra L. Olson (NASA Glenn Research Center)",
-    "material": "1/2\" (12.7 mm) clear PMMA cylinder rod",
+    "material": "1/2\" (12.7 mm) clear PMMA cylinder rod (sample 221m)",
     "category": "PMMA Rod",
     "thickness_mm": 12.7,
     "gmt": 202,
     "date": "2014-07-21",
     "flow_restrictor": 2,
+    "flow_type": "Narrow duct restrictor (Flow restrictor: 2)",
     "fan_display": "1.3 - 0.31 pot",
     "air_speed_nominal": "0-5 cm/s",
     "initial_o2": 15.9,
@@ -3707,8 +3720,11 @@ export const HERO_RUNS: HeroRun[] = [
     "final_co2": 1.85,
     "initial_co_ppm": 389.0,
     "final_co_ppm": 950.0,
+    "co_qualifier": "Glovebox Chamber Accumulation (Not crew cabin atmosphere)",
+    "chamber_location": "Microgravity Science Glovebox (MSG) - Sealed Chamber",
+    "source_table": "NASA/TM-20210011385 Table A.5, printed p110 / PDF p118",
     "co_danger": "Critical (500+ ppm)",
-    "outcome": "Thick cylindrical geometry in vitiated (15.9% O\u2082) microgravity air resulted in prolonged smoldering and incomplete pyrolysis, generating 950 ppm of carbon monoxide \u2014 the highest recorded toxic gas exposure in BASS-II.",
+    "outcome": "Thick cylindrical PMMA rod (sample 221m) in vitiated (15.9% O₂) microgravity air resulted in prolonged smoldering and incomplete pyrolysis, generating 950 ppm of carbon monoxide inside the sealed Microgravity Science Glovebox (MSG). Note: Represents localized glovebox chamber accumulation, not uncontained astronaut cabin exposure.",
     "video_url": null,
     "has_video": false,
     "telemetry": {
@@ -3805,14 +3821,15 @@ export const HERO_RUNS: HeroRun[] = [
   {
     "id": "RUN-T22",
     "test_id": "T22",
-    "title": "T22 \u2014 1 cm SIBAL Spacecraft Insulation Opposed Flow Spread",
+    "title": "T22 — 1 cm SIBAL Fabric Concurrent Flow Spread",
     "pi": "James S. T'ien (Case Western Reserve University)",
-    "material": "1 cm SIBAL fabric (silicone-treated insulation)",
+    "material": "1 cm wide SIBAL composite fabric (sample 146m)",
     "category": "SIBAL",
     "thickness_mm": 0.5,
     "gmt": 190,
     "date": "2014-07-09",
     "flow_restrictor": 2,
+    "flow_type": "Concurrent flow (Table A.6)",
     "fan_display": "3.4 - 1.7",
     "air_speed_nominal": "5-10 cm/s",
     "initial_o2": 17.1,
@@ -3821,8 +3838,11 @@ export const HERO_RUNS: HeroRun[] = [
     "final_co2": 0.62,
     "initial_co_ppm": 140.0,
     "final_co_ppm": 162.0,
+    "co_qualifier": null,
+    "chamber_location": "Microgravity Science Glovebox (MSG) - Sealed Chamber",
+    "source_table": "NASA/TM-20210011385 Table A.6, printed p111 / PDF p119",
     "co_danger": "Moderate (50-200 ppm)",
-    "outcome": "Steady opposed-flow flame spread over SIBAL composite fabric in reduced oxygen (17.1% O\u2082). Measured steady flame front propagation with moderate toxic byproduct production.",
+    "outcome": "Concurrent-flow flame spread over 1 cm wide SIBAL composite fabric (sample 146m) under 17.1% O₂ per Table A.6. Steady flame front propagation with moderate toxic gas production (140 → 162 ppm CO in MSG).",
     "video_url": "/videos/BASS_GMT190_SAMPLE_146_TEST_T22.mp4",
     "has_video": true,
     "telemetry": {
@@ -3912,6 +3932,7 @@ export const HERO_RUNS: HeroRun[] = [
     "gmt": 50,
     "date": "2014-02-19",
     "flow_restrictor": 2,
+    "flow_type": "Narrow duct (Flow restrictor: 2)",
     "fan_display": "82",
     "air_speed_nominal": "9.5 cm/s",
     "initial_o2": 22.2,
@@ -3920,8 +3941,11 @@ export const HERO_RUNS: HeroRun[] = [
     "final_co2": 0.45,
     "initial_co_ppm": 0.0,
     "final_co_ppm": 2.0,
+    "co_qualifier": null,
+    "chamber_location": "Microgravity Science Glovebox (MSG) - Sealed Chamber",
+    "source_table": "NASA/TM-20210011385 Section 3.2 / Sample 147",
     "co_danger": "Low (<50 ppm)",
-    "outcome": "Nomex aramid fabric exhibited high fire resistance. Igniter provoked localized charring but sustained flame spread failed, leaving ambient O\u2082 and toxic gases virtually unchanged.",
+    "outcome": "Nomex aramid fabric exhibited high fire resistance. Igniter provoked localized charring but sustained flame spread failed, leaving ambient O₂ and toxic gases virtually unchanged inside the sealed MSG chamber.",
     "video_url": null,
     "has_video": false,
     "telemetry": {
@@ -4031,15 +4055,15 @@ export const EVIDENCE_CARDS: EvidenceCard[] = [
   {
     "id": "ev_bass_summary",
     "title": "Burning and Suppression of Solids - II (BASS-II) Final Summary Report",
-    "authors": "J. Marcum, Sandra L. Olson, Paul V. Ferkul",
-    "journal": "NASA Technical Memorandum, NASA/TM-20210011385, NTRS ID 20210011385",
+    "authors": "Sandra L. Olson, Paul V. Ferkul, Fletcher J. Miller, Indrek S. Wichman, James S. T'ien, Carlos Fernandez-Pello, Vedha Nayagam, Subrata Bhattacharjee",
+    "journal": "NASA Technical Memorandum NASA/TM-20210011385 (NTRS Document ID: 20210011385)",
     "year": 2021,
-    "doi": "10.60555/4qc4-de67",
+    "doi": "10.60555/4qc4-de67 (PSI Dataset DOI) / NTRS ID: 20210011385",
     "url": "https://ntrs.nasa.gov/citations/20210011385",
     "category": "Mission Safety Report",
-    "key_finding": "Comprehensive documentation of 129 space station combustion tests across 6 PIs. Microgravity ventilation promotes stable flame spread even at sub-atmospheric oxygen levels, while thick fuels present severe cabin toxic gas threats.",
+    "key_finding": "Comprehensive documentation of 129 space station combustion tests across 6 PIs inside the Microgravity Science Glovebox (MSG). Microgravity ventilation promotes stable flame spread even at sub-atmospheric oxygen levels, while thick fuels present severe toxic gas accumulation inside sealed chambers.",
     "supports": "Official baseline ground-truth documentation for all BASS-II flight tests, run matrices, sensor calibrations, and crew observations in the MSG.",
-    "limitations": "Several video records lack millimetric scale markers; sensor timestamps in glovebox telemetry require discrete alignment."
+    "limitations": "Sensor measurements record initial and final chamber endpoint concentrations; raw continuous synchronized sensor streams are unavailable. Video records lack calibrated stereoscopic scales."
   },
   {
     "id": "ev_bhatt_2016",

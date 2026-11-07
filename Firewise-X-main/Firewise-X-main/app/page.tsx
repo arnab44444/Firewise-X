@@ -493,14 +493,24 @@ export default function FirewiseXApp() {
     let maxY = 0;
     const mask = new Uint8Array(cw * ch);
 
+    // Chamber Region of Interest (Excluding Camera OSD/HUD overlay clock at top and margins)
+    const isInsideChamberROI = (px: number, py: number) => {
+      if (py < 0.16 * ch) return false; // Exclude top camera clock / HUD (e.g. 10:09:43 GMT)
+      if (py > 0.92 * ch) return false; // Exclude bottom edge margin
+      if (px < 0.05 * cw || px > 0.95 * cw) return false; // Exclude side chamber bezels
+      return true;
+    };
+
     for (let i = 0; i < mask.length; i++) {
+      const px = i % cw;
+      const py = Math.floor(i / cw);
+      if (!isInsideChamberROI(px, py)) continue;
+
       const idx = i * 4;
       const luma = 0.2126 * data[idx] + 0.7152 * data[idx + 1] + 0.0722 * data[idx + 2];
       if (luma > threshold) {
         mask[i] = 1;
         area++;
-        const px = i % cw;
-        const py = Math.floor(i / cw);
         sumX += px;
         sumY += py;
         if (px < minX) minX = px;
@@ -520,18 +530,32 @@ export default function FirewiseXApp() {
       }
     }
 
-    // Overlay Golden Flame Glow
-    for (let i = 0; i < mask.length; i++) {
-      if (mask[i]) {
-        const idx = i * 4;
-        data[idx] = 245;
-        data[idx + 1] = 176;
-        data[idx + 2] = 65;
+    // Overlay Golden Flame Glow (Only for coherent flame pixels inside Chamber ROI)
+    if (area >= 60) {
+      for (let i = 0; i < mask.length; i++) {
+        if (mask[i]) {
+          const idx = i * 4;
+          data[idx] = 245;
+          data[idx + 1] = 176;
+          data[idx + 2] = 65;
+        }
       }
     }
     ctx.putImageData(imgData, 0, 0);
 
-    if (area > 5) {
+    // Draw visual ROI guideline (subtle dashed green border indicating active flame analysis zone)
+    ctx.strokeStyle = "rgba(46, 204, 113, 0.4)";
+    ctx.lineWidth = 1;
+    ctx.setLineDash([4, 4]);
+    ctx.strokeRect(
+      Math.floor(0.05 * cw),
+      Math.floor(0.16 * ch),
+      Math.floor(0.9 * cw),
+      Math.floor(0.76 * ch)
+    );
+    ctx.setLineDash([]);
+
+    if (area >= 60) {
       const cx = Math.round(sumX / area);
       const cy = Math.round(sumY / area);
       const len = maxX - minX + 1;
@@ -567,6 +591,7 @@ export default function FirewiseXApp() {
         cy,
         status: "🔥 Active Flame Front",
       });
+      return area;
     } else {
       setCvMetrics({
         area: 0,
@@ -575,8 +600,9 @@ export default function FirewiseXApp() {
         per: 0,
         cx: 0,
         cy: 0,
-        status: "❄️ Quenched / Below Threshold",
+        status: "❄️ No Visible Flame / Pre-Test Frame",
       });
+      return 0;
     }
   };
 
@@ -598,20 +624,8 @@ export default function FirewiseXApp() {
         };
         video.addEventListener("seeked", onSeeked);
       });
-      processCurrentFrame();
-      const canvas = flameCanvasRef.current;
-      if (canvas) {
-        const ctx = canvas.getContext("2d", { willReadFrequently: true });
-        if (ctx) {
-          const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
-          let a = 0;
-          for (let p = 0; p < imgData.length; p += 4) {
-            const luma = 0.2126 * imgData[p] + 0.7152 * imgData[p + 1] + 0.0722 * imgData[p + 2];
-            if (luma > threshold) a++;
-          }
-          areas.push(a);
-        }
-      }
+      const frameArea = processCurrentFrame() || 0;
+      areas.push(frameArea);
     }
     video.currentTime = originalTime;
     setSampledAreaCurve(areas);
@@ -687,7 +701,14 @@ export default function FirewiseXApp() {
 
       const matchPi = selectedPi === "ALL" || t.pi === selectedPi;
       const matchCat = selectedCategory === "ALL" || t.category === selectedCategory;
-      const matchDanger = selectedDanger === "ALL" || t.danger_level === selectedDanger;
+      const matchDanger =
+        selectedDanger === "ALL" ||
+        (selectedDanger === "CRITICAL" && (t.danger_level.includes("Critical") || t.danger_level.includes("500") || (t.co_final !== null && t.co_final >= 500))) ||
+        (selectedDanger === "HIGH" && (t.danger_level.includes("High") || (t.co_final !== null && t.co_final >= 200 && t.co_final < 500))) ||
+        (selectedDanger === "MODERATE" && (t.danger_level.includes("Moderate") || (t.co_final !== null && t.co_final >= 50 && t.co_final < 200))) ||
+        (selectedDanger === "LOW" && (t.danger_level.includes("Low") || (t.co_final !== null && t.co_final < 50))) ||
+        t.danger_level === selectedDanger;
+
       const matchRestr =
         selectedRestrictor === "ALL" ||
         (t.flow_restrictor !== null && String(t.flow_restrictor) === selectedRestrictor);
@@ -700,10 +721,19 @@ export default function FirewiseXApp() {
     return Array.from(new Set(ALL_TESTS.map((t) => t.pi)));
   }, []);
 
+  // Detect unanswerable queries (e.g. Lunar/Mars/Cabin exposure) for Honest Abstention
+  const isUnanswerableQuery = useMemo(() => {
+    const q = evidenceSearch.toLowerCase().trim();
+    return q.includes("lunar") || q.includes("moon") || q.includes("mars") || q.includes("cabin exposure") || q.includes("crew cabin") || q.includes("partial gravity");
+  }, [evidenceSearch]);
+
   const filteredEvidence = useMemo(() => {
     return EVIDENCE_CARDS.filter((e) => {
-      const matchCat = evidenceFilter === "ALL" || e.category === evidenceFilter;
-      const q = evidenceSearch.toLowerCase();
+      const matchCat =
+        evidenceFilter === "ALL" ||
+        e.category === evidenceFilter ||
+        e.category.toLowerCase().includes(evidenceFilter.toLowerCase().replace(" limits", "").replace(" boundary", ""));
+      const q = evidenceSearch.toLowerCase().trim();
       const matchQ =
         !q ||
         e.title.toLowerCase().includes(q) ||
@@ -715,16 +745,41 @@ export default function FirewiseXApp() {
   }, [evidenceFilter, evidenceSearch]);
 
   const exportTelemetryCsv = () => {
-    const t = currentHero.telemetry;
-    let csv = "time_s,oxygen_pct,co2_pct,co_ppm,airflow_cms\n";
-    for (let i = 0; i < t.time_s.length; i++) {
-      csv += `${t.time_s[i]},${t.o2[i]},${t.co2[i]},${t.co_ppm[i]},${t.airflow_cms[i]}\n`;
+    const r = currentHero;
+    let csv = `# ========================================================================\n`;
+    csv += `# NASA BASS-II OFFICIAL SCIENTIFIC FLIGHT RECORD (PSI-25 / DOI: 10.60555/4qc4-de67)\n`;
+    csv += `# Report Source: NASA/TM-20210011385 (NTRS Document ID: 20210011385)\n`;
+    csv += `# Source Locator: ${r.source_table || "Appendix A"}\n`;
+    csv += `# Test ID: ${r.test_id} | Sample: ${r.material} | Category: ${r.category} (${r.thickness_mm} mm)\n`;
+    csv += `# Chamber Atmosphere: Microgravity Science Glovebox (MSG) Sealed Chamber (Not Crew Cabin)\n`;
+    csv += `# Flow Configuration: ${r.flow_type || "Forced flow"} | Nominal Velocity: ${r.air_speed_nominal}\n`;
+    csv += `# VERIFIED NASA BEFORE/AFTER SENSOR ENDPOINTS (GROUND TRUTH):\n`;
+    csv += `#   - Initial Oxygen: ${r.initial_o2}% | Final Oxygen: ${r.final_o2}% (Depletion: ${(r.initial_o2 - r.final_o2).toFixed(2)}%)\n`;
+    csv += `#   - Initial Carbon Monoxide: ${r.initial_co_ppm} ppm | Final Carbon Monoxide: ${r.final_co_ppm} ppm ${r.co_qualifier ? `[Qualifier: ${r.co_qualifier}]` : ""}\n`;
+    csv += `#   - Initial Carbon Dioxide: ${r.initial_co2}% | Final Carbon Dioxide: ${r.final_co2}%\n`;
+    csv += `# Provenance Note: NASA/TM-20210011385 recorded discrete glovebox sensor endpoints.\n`;
+    csv += `# Continuous time-series rows below are derived illustrative interpolations between endpoints.\n`;
+    csv += `# ========================================================================\n`;
+    csv += `observation_type,source_locator,time_s,oxygen_pct,co2_pct,co_ppm,co_qualifier,airflow_cms,clock_status\n`;
+
+    // Row 1: NASA Verified Initial Endpoint
+    csv += `NASA_VERIFIED_INITIAL,${r.source_table || "NASA/TM-20210011385"},0.0,${r.initial_o2},${r.initial_co2},${r.initial_co_ppm},nominal,${r.telemetry.airflow_cms[0] || 0},MSG_CLOCK_PRE_TEST\n`;
+
+    // Intermediate Derived Series
+    const t = r.telemetry;
+    for (let i = 1; i < t.time_s.length - 1; i++) {
+      csv += `DERIVED_INTERPOLATION,SIMULATED_TRAJECTORY,${t.time_s[i]},${t.o2[i]},${t.co2[i]},${t.co_ppm[i]},${r.co_qualifier || "interpolated"},${t.airflow_cms[i]},SYNTHETIC_STEP\n`;
     }
+
+    // Row Last: NASA Verified Final Endpoint
+    const lastIdx = t.time_s.length - 1;
+    csv += `NASA_VERIFIED_FINAL,${r.source_table || "NASA/TM-20210011385"},${t.time_s[lastIdx]},${r.final_o2},${r.final_co2},${r.final_co_ppm},${r.co_qualifier || "nominal"},${t.airflow_cms[lastIdx]},MSG_CLOCK_POST_TEST\n`;
+
     const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.href = url;
-    link.download = `NASA_BASS_II_${currentHero.test_id}_Telemetry.csv`;
+    link.download = `NASA_BASS_II_${r.test_id}_Source_Reconciled_Telemetry.csv`;
     link.click();
     URL.revokeObjectURL(url);
   };
@@ -953,20 +1008,20 @@ export default function FirewiseXApp() {
               <div style={{ marginTop: "16px", paddingTop: "14px", borderTop: "1px solid var(--bd)" }}>
                 <div className="row-between" style={{ fontSize: "0.82rem" }}>
                   <span style={{ fontWeight: 700, color: "var(--tx-bright)" }}>
-                    🚨 Cabin Carbon Monoxide Toxicity Threat Gauge:
+                    🚨 Glovebox Atmosphere CO Concentration & Toxicity Scale:
                   </span>
                   <span style={{ fontWeight: 800, color: currentHero.final_co_ppm >= 500 ? "var(--danger)" : currentHero.final_co_ppm >= 200 ? "var(--am)" : "var(--ok)" }}>
-                    Peak {currentHero.final_co_ppm} ppm ({currentHero.co_danger})
+                    {currentHero.co_qualifier || `Peak ${currentHero.final_co_ppm} ppm`} ({currentHero.co_danger})
                   </span>
                 </div>
                 <div className="threat-meter">
                   <div className="threat-pointer" style={{ left: `${threatPercent}%` }}></div>
                 </div>
                 <div className="row-between" style={{ fontSize: "0.74rem", color: "var(--mu)" }}>
-                  <span>🟢 Safe (&lt;50 ppm)</span>
-                  <span>🟡 Caution (50-200 ppm)</span>
-                  <span>🟠 Danger (200-500 ppm)</span>
-                  <span>🔴 Lethal Cabin Hazard (&gt;500 ppm)</span>
+                  <span>🟢 Low (&lt;50 ppm)</span>
+                  <span>🟡 Moderate (50-200 ppm)</span>
+                  <span>🟠 High (200-500 ppm)</span>
+                  <span>🔴 Critical / Off-Scale (&gt;500 ppm)</span>
                 </div>
               </div>
             </div>
@@ -978,9 +1033,9 @@ export default function FirewiseXApp() {
                   <span className="tag tag-cyan">Quick Guide</span>
                 </div>
                 <p className="mu" style={{ margin: 0, lineHeight: 1.6 }}>
-                  <b>1) Telemetry Curve:</b> Orange curve shows toxic <b>Carbon Monoxide (CO ppm)</b>; Cyan curve shows <b>Oxygen (O₂ %)</b> consumption. Hover over the chart with your mouse to view exact second-by-second readings.<br />
-                  <b>2) Red Event Dashes:</b> Indicate ignition, forced airflow changes, or rapid toxic accumulation.<br />
-                  <b>3) Scientific Ground Truth:</b> Explains exactly what happened inside the microgravity combustion duct according to NASA flight logs.
+                  <b>1) Ground Truth Endpoints:</b> NASA/TM-20210011385 recorded discrete sensor endpoints before ignition and after extinction in the MSG.<br />
+                  <b>2) Telemetry Curve:</b> Continuous curves are derived illustrative interpolations between the verified endpoints (Orange: CO ppm, Cyan: O₂ %).<br />
+                  <b>3) Glovebox vs Cabin:</b> Measurements reflect concentration inside the sealed Microgravity Science Glovebox, not uncontained astronaut cabin exposure.
                 </p>
               </div>
             )}
@@ -994,6 +1049,35 @@ export default function FirewiseXApp() {
                   <span className="tag tag-amber">GMT Day: {currentHero.gmt}</span>
                 </div>
                 <h2 style={{ fontSize: "1.2rem", lineHeight: 1.3 }}>{currentHero.title}</h2>
+
+                {/* Verified NASA Ground-Truth Sensor Endpoints */}
+                <div style={{ background: "rgba(5, 10, 20, 0.75)", border: "1px solid var(--bd)", borderRadius: "10px", padding: "12px", margin: "12px 0" }}>
+                  <div className="row-between" style={{ marginBottom: "6px" }}>
+                    <b style={{ color: "var(--cy)", fontSize: "0.85rem" }}>📌 Verified NASA Sensor Endpoints</b>
+                    <span className="tag tag-amber">{currentHero.source_table || "NASA/TM-20210011385"}</span>
+                  </div>
+                  <div style={{ fontSize: "0.82rem", display: "flex", flexDirection: "column", gap: "4px" }}>
+                    <div className="row-between">
+                      <span className="mu">Chamber:</span>
+                      <span style={{ color: "#d2dff5" }}>Microgravity Science Glovebox (MSG)</span>
+                    </div>
+                    <div className="row-between">
+                      <span className="mu">O₂ (Before → After):</span>
+                      <span style={{ color: "var(--ok)", fontWeight: 700 }}>{currentHero.initial_o2}% → {currentHero.final_o2}% (Δ {(currentHero.initial_o2 - currentHero.final_o2).toFixed(2)}%)</span>
+                    </div>
+                    <div className="row-between">
+                      <span className="mu">CO (Before → After):</span>
+                      <b style={{ color: currentHero.final_co_ppm >= 500 ? "var(--danger)" : "var(--am)" }}>
+                        {currentHero.initial_co_ppm} ppm → {currentHero.co_qualifier || `${currentHero.final_co_ppm} ppm`}
+                      </b>
+                    </div>
+                    <div className="row-between">
+                      <span className="mu">Flow Direction:</span>
+                      <span>{currentHero.flow_type || "Forced flow"}</span>
+                    </div>
+                  </div>
+                </div>
+
                 <table style={{ margin: "12px 0" }}>
                   <tbody>
                     <tr><td className="mu">Investigator</td><td><b>{currentHero.pi}</b></td></tr>
@@ -1006,7 +1090,7 @@ export default function FirewiseXApp() {
                       <td className="mu">Peak Toxic CO</td>
                       <td>
                         <span className={currentHero.final_co_ppm >= 500 ? "tag tag-red" : currentHero.final_co_ppm >= 200 ? "tag tag-amber" : "tag tag-green"}>
-                          {currentHero.final_co_ppm} ppm
+                          {currentHero.co_qualifier || `${currentHero.final_co_ppm} ppm`}
                         </span>
                       </td>
                     </tr>
@@ -1029,7 +1113,12 @@ export default function FirewiseXApp() {
               <div className="c" style={{ display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
                 <div>
                   <div className="row-between" style={{ marginBottom: "8px" }}>
-                    <h3 style={{ margin: 0 }}>ISS Sensor Telemetry (Time-Series)</h3>
+                    <div>
+                      <h3 style={{ margin: 0 }}>Combustion Trajectory (Derived Interpolation)</h3>
+                      <div className="mu" style={{ fontSize: "0.74rem" }}>
+                        Derived illustrative trajectory between NASA verified endpoints. Discrete sensor readings logged in MSG.
+                      </div>
+                    </div>
                     <div className="row" style={{ fontSize: "0.82rem" }}>
                       <span style={{ color: "#f39c12", fontWeight: 700 }}>● CO (ppm)</span>
                       <span style={{ color: "#4fd1e8", fontWeight: 700 }}>● O₂ (%)</span>
@@ -1132,9 +1221,14 @@ export default function FirewiseXApp() {
                 <button
                   className="pill-filter"
                   style={{ borderColor: "rgba(255, 87, 87, 0.4)", color: "var(--danger)" }}
-                  onClick={() => setSelectedDanger("Critical (>500 ppm)")}
+                  onClick={() => {
+                    setSelectedDanger("CRITICAL");
+                    setSelectedCategory("ALL");
+                    setSelectedPi("ALL");
+                    setSearchQuery("");
+                  }}
                 >
-                  🚨 Critical CO Spikes (&gt;500 ppm)
+                  🚨 Critical CO Spikes (500+ ppm)
                 </button>
                 <button
                   className="pill-filter"
@@ -1180,10 +1274,10 @@ export default function FirewiseXApp() {
                 </select>
                 <select value={selectedDanger} onChange={(e) => setSelectedDanger(e.target.value)}>
                   <option value="ALL">All Danger Levels</option>
-                  <option value="Safe (<50 ppm)">Safe (&lt;50 ppm)</option>
-                  <option value="Moderate (50-200 ppm)">Moderate (50-200 ppm)</option>
-                  <option value="Elevated (200-500 ppm)">Elevated (200-500 ppm)</option>
-                  <option value="Critical (>500 ppm)">Critical (&gt;500 ppm)</option>
+                  <option value="LOW">Low (&lt;50 ppm)</option>
+                  <option value="MODERATE">Moderate (50-200 ppm)</option>
+                  <option value="HIGH">High (200-500 ppm)</option>
+                  <option value="CRITICAL">Critical (500+ ppm / Off-Scale)</option>
                 </select>
               </div>
             </div>
@@ -1369,7 +1463,7 @@ export default function FirewiseXApp() {
                     aria-label="Select ISS Video"
                   >
                     <option value="/videos/BASS_GMT50_SAMPLE_147_TEST_B1.mp4">Test B1: Thin PMMA Film (Quenching Limit)</option>
-                    <option value="/videos/BASS_GMT190_SAMPLE_146_TEST_T22.mp4">Test T22: Thick PMMA Rod (Forced Flow)</option>
+                    <option value="/videos/BASS_GMT190_SAMPLE_146_TEST_T22.mp4">Test T22: 1 cm SIBAL Fabric (Concurrent Flow)</option>
                   </select>
                 </div>
               </div>
@@ -1636,7 +1730,15 @@ export default function FirewiseXApp() {
 
               {/* Filter Pills */}
               <div className="row" style={{ marginTop: "12px", gap: "8px" }}>
-                {["ALL", "Extinction Limits", "Toxic Emissions", "Soot Mechanics", "Numerical Modeling", "Space Fabrics"].map((cat) => (
+                {[
+                  "ALL",
+                  "Extinction Boundary",
+                  "Rod Flammability & Toxicity",
+                  "Mission Safety Report",
+                  "Combustion Regimes",
+                  "Fabric & Insulation Safety",
+                  "Intermediate Thickness Fuel",
+                ].map((cat) => (
                   <button
                     key={cat}
                     className={`pill-filter ${evidenceFilter === cat ? "active" : ""}`}
@@ -1647,6 +1749,19 @@ export default function FirewiseXApp() {
                 ))}
               </div>
             </div>
+
+            {/* Honest Scientific Abstention State for Lunar/Mars/Cabin Queries */}
+            {isUnanswerableQuery && (
+              <div className="callout-box danger-callout" style={{ margin: "14px 0" }}>
+                <div className="row-between" style={{ marginBottom: "6px" }}>
+                  <h4 style={{ color: "var(--danger)", margin: 0 }}>⚠️ Evidence Boundary & Honest Scientific Abstention</h4>
+                  <span className="tag tag-red">Scope Disclosure</span>
+                </div>
+                <p style={{ margin: 0, fontSize: "0.86rem", lineHeight: 1.6, color: "#fbd38d" }}>
+                  <b>Scientific Scope Disclosure:</b> NASA BASS-II (PSI-25) was conducted strictly inside the sealed Microgravity Science Glovebox (MSG) in microgravity (0g). <b>No partial-gravity (Moon 0.16g or Mars 0.38g) combustion data exists in this archive.</b> Extrapolating these low-gravity results to lunar habitats or uncontained crew cabin exposure without dedicated aircraft parabolic or centrifuge experiments is scientifically unsupported.
+                </p>
+              </div>
+            )}
 
             {/* Evidence Cards Grid */}
             <div className="g-3">
