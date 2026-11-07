@@ -1868,23 +1868,23 @@ export default function FirewiseXApp() {
               <div className="row" style={{ gap: "10px", flexWrap: "wrap", marginBottom: "12px" }}>
                 <input
                   type="search"
-                  placeholder="🔍 Filter 84 videos (e.g. B1, T22, Nomex, 100 micron)..."
+                  placeholder="🔍 Filter 84 videos (e.g. B1, T22, Nomex)..."
                   value={videoFilterQuery}
                   onChange={(e) => setVideoFilterQuery(e.target.value)}
-                  style={{ flex: "1 1 240px", padding: "8px 12px", fontSize: "0.85rem" }}
+                  style={{ flex: "1 1 200px", padding: "8px 12px", fontSize: "0.84rem", width: "100%", maxWidth: "100%", boxSizing: "border-box" }}
                 />
 
                 <select
                   value={selectedVideoUrl}
                   onChange={(e) => setSelectedVideoUrl(e.target.value)}
                   aria-label="Select ISS Spaceflight Video"
-                  style={{ flex: "2 1 360px", padding: "8px 12px", fontSize: "0.85rem", maxWidth: "100%" }}
+                  style={{ flex: "2 1 260px", padding: "8px 12px", fontSize: "0.84rem", width: "100%", maxWidth: "100%", boxSizing: "border-box" }}
                 >
                   {Object.entries(videoGroups).map(([groupName, vids]) => (
-                    <optgroup key={groupName} label={`${groupName} (${vids.length} videos)`}>
+                    <optgroup key={groupName} label={groupName}>
                       {vids.map((v) => (
                         <option key={v.url} value={v.url}>
-                          {v.title} [{v.sizeMB} MB]
+                          {v.title}
                         </option>
                       ))}
                     </optgroup>
