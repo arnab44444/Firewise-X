@@ -15,6 +15,11 @@ export default function FirewiseXApp() {
   const [windowWidth, setWindowWidth] = useState<number>(1200);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState<boolean>(false);
 
+  // Hero Visual Showcase state
+  const [heroMediaMode, setHeroMediaMode] = useState<"video" | "cv" | "transition">("video");
+  const [heroVideoTarget, setHeroVideoTarget] = useState<"B1" | "T22">("B1");
+  const [heroStage, setHeroStage] = useState<number>(1);
+
   // Mission Control state
   const [selectedHeroIndex, setSelectedHeroIndex] = useState<number>(0);
   const [showHowToUse, setShowHowToUse] = useState<boolean>(true);
@@ -925,36 +930,210 @@ export default function FirewiseXApp() {
         {/* ========================================================= */}
         {currentRoute === "/" && (
           <div style={{ display: "flex", flexDirection: "column", gap: "28px" }}>
-            {/* Hero Section */}
-            <section className="c c-highlight" style={{ padding: "clamp(22px, 4.5vw, 40px)" }}>
-              <div className="row-between" style={{ marginBottom: "14px" }}>
-                <div className="row">
-                  <span className="tag tag-cyan">🛰️ Real NASA ISS Flight Data Connected</span>
-                  <span className="tag tag-amber">DOI: 10.60555/4qc4-de67</span>
-                </div>
-                <div className="row">
-                  <span className="live-dot"></span>
-                  <span style={{ fontSize: "0.78rem", fontWeight: 700, letterSpacing: "0.05em", color: "var(--ok)" }}>
-                    LIVE DATASET CONNECTED
-                  </span>
-                </div>
-              </div>
+            {/* Hero Section with Responsive 2-Column Visual Showcase */}
+            <section className="c c-highlight" style={{ padding: "clamp(20px, 3.8vw, 36px)" }}>
+              <div className="hero-grid">
+                {/* Left Column: Narrative & Action CTAs */}
+                <div>
+                  <div className="row" style={{ marginBottom: "12px", gap: "8px" }}>
+                    <span className="tag tag-cyan">🛰️ Real NASA ISS Flight Data Connected</span>
+                    <span className="tag tag-amber">DOI: 10.60555/4qc4-de67</span>
+                    <div className="row" style={{ gap: "6px" }}>
+                      <span className="live-dot"></span>
+                      <span style={{ fontSize: "0.75rem", fontWeight: 700, letterSpacing: "0.05em", color: "var(--ok)" }}>
+                        LIVE DATASET
+                      </span>
+                    </div>
+                  </div>
 
-              <h1>
-                Flame in Freefall.<br />
-                <span style={{ color: "var(--cy)" }}>Evidence-Grounded Spacecraft Fire Safety.</span>
-              </h1>
-              <p style={{ maxWidth: "780px", color: "#b8cce8", fontSize: "1.05rem", margin: "14px 0 24px", lineHeight: 1.6 }}>
-                In microgravity, buoyancy vanishes: hot gases do not rise, turning flames into slow, quiet, deceptive spheres. 
-                NASA’s BASS-II experiment on the International Space Station revealed that under sluggish cabin airflow, 
-                plastics and fabrics burn with dangerous incomplete combustion—spewing toxic carbon monoxide surges up to <b>950 ppm</b>.
-                <b> FIREWISE-X</b> unites 129 real spaceflight combustion tests, explainable computer vision flame tracking, 
-                and peer-reviewed NASA literature into one traceable research engine.
-              </p>
-              <div className="row">
-                <button onClick={() => navigateTo("/mc")}>🚀 Launch Mission Control</button>
-                <button className="s" onClick={() => navigateTo("/exp")}>📊 Explore 129 Flight Tests</button>
-                <button className="s" onClick={() => navigateTo("/flame")}>🎥 Analyze ISS Video (CV)</button>
+                  <h1 style={{ fontSize: "clamp(1.75rem, 3.2vw, 2.6rem)", lineHeight: 1.18, marginBottom: "12px" }}>
+                    Flame in Freefall.<br />
+                    <span style={{ color: "var(--cy)" }}>Evidence-Grounded Spacecraft Fire Safety.</span>
+                  </h1>
+
+                  <p style={{ color: "#b8cce8", fontSize: "1rem", margin: "12px 0 22px", lineHeight: 1.6 }}>
+                    In microgravity, buoyancy vanishes: hot gases do not rise, turning flames into slow, quiet, deceptive spheres. 
+                    NASA’s BASS-II experiment on the International Space Station revealed that under sluggish cabin airflow, 
+                    plastics and fabrics burn with dangerous incomplete combustion—spewing toxic carbon monoxide surges up to <b>950 ppm</b>.
+                    <b> FIREWISE-X</b> unites 129 spaceflight combustion tests, explainable computer vision flame tracking, 
+                    and peer-reviewed NASA literature into one traceable research engine.
+                  </p>
+
+                  <div className="row" style={{ gap: "10px", marginBottom: "18px" }}>
+                    <button onClick={() => navigateTo("/mc")}>🚀 Launch Mission Control</button>
+                    <button className="s" onClick={() => navigateTo("/flame")}>🎥 Analyze ISS Video (CV)</button>
+                    <button className="s" onClick={() => navigateTo("/exp")}>📊 Explore 129 Flight Tests</button>
+                  </div>
+
+                  <div className="row" style={{ gap: "8px", fontSize: "0.78rem", color: "var(--mu)" }}>
+                    <span>🔬 Classical Luminance CV</span> • 
+                    <span>📑 NASA/TM-20210011385</span> • 
+                    <span>🧪 6 PIs · 129 Tests</span>
+                  </div>
+                </div>
+
+                {/* Right Column: Interactive Real NASA ISS Flight Reel & Transition Showcase */}
+                <div className="hero-visual-card">
+                  {/* Card Header & Mode Switcher */}
+                  <div className="hero-visual-header">
+                    <div className="row" style={{ gap: "6px" }}>
+                      <span className="live-dot" style={{ background: "#ff5757" }}></span>
+                      <span style={{ fontWeight: 800, letterSpacing: "0.06em", color: "var(--tx-bright)" }}>
+                        ISS FLIGHT REEL
+                      </span>
+                    </div>
+
+                    <div className="hero-mode-tabs">
+                      <button
+                        className={`hero-mode-btn ${heroMediaMode === "video" ? "active" : ""}`}
+                        onClick={() => setHeroMediaMode("video")}
+                      >
+                        🎥 Live Loop
+                      </button>
+                      <button
+                        className={`hero-mode-btn ${heroMediaMode === "cv" ? "active" : ""}`}
+                        onClick={() => setHeroMediaMode("cv")}
+                      >
+                        🔬 CV Detection
+                      </button>
+                      <button
+                        className={`hero-mode-btn ${heroMediaMode === "transition" ? "active" : ""}`}
+                        onClick={() => setHeroMediaMode("transition")}
+                      >
+                        🔄 3-Stage Burn
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Media Frame Viewport */}
+                  <div className="hero-media-wrapper">
+                    {/* Top HUD Overlay */}
+                    <div className="hero-hud-top">
+                      <span className="hero-hud-badge">
+                        <span style={{ color: "#ff5757" }}>●</span> ISS MICROGRAVITY SCIENCE GLOVEBOX
+                      </span>
+                      <span className="hero-hud-badge" style={{ borderColor: "rgba(245, 176, 65, 0.45)", color: "var(--am)" }}>
+                        {heroVideoTarget === "B1" ? "TEST B1 · SAMPLE 147" : "TEST T22 · SAMPLE 146"}
+                      </span>
+                    </div>
+
+                    {/* Mode 1: Video Loop */}
+                    {heroMediaMode === "video" && (
+                      <video
+                        key={heroVideoTarget}
+                        src={heroVideoTarget === "B1" ? "/videos/BASS_GMT50_SAMPLE_147_TEST_B1.mp4" : "/videos/BASS_GMT190_SAMPLE_146_TEST_T22.mp4"}
+                        autoPlay
+                        loop
+                        muted
+                        playsInline
+                      />
+                    )}
+
+                    {/* Mode 2: CV Segmentation Frame */}
+                    {heroMediaMode === "cv" && (
+                      <img
+                        src="/images/hero_b1_cv_segmented.jpg"
+                        alt="NASA BASS-II CV Flame Segmentation"
+                      />
+                    )}
+
+                    {/* Mode 3: 3-Stage Transition Sequence */}
+                    {heroMediaMode === "transition" && (
+                      <img
+                        src={
+                          heroStage === 0
+                            ? "/images/hero_b1_pretest.jpg"
+                            : heroStage === 1
+                            ? "/images/hero_b1_flame.jpg"
+                            : "/images/hero_b1_cv_segmented.jpg"
+                        }
+                        alt="Microgravity Combustion Transition Stage"
+                        style={{ transition: "opacity 0.25s ease-in-out" }}
+                      />
+                    )}
+
+                    {/* Bottom Telemetry HUD Overlay */}
+                    <div className="hero-hud-bottom">
+                      <div className="hero-hud-stats">
+                        <div className="hero-hud-stat">
+                          <span className="hero-hud-stat-label">Fuel Material</span>
+                          <span className="hero-hud-stat-val">
+                            {heroVideoTarget === "B1" ? "100 µm PMMA Film" : "1 cm SIBAL Fabric"}
+                          </span>
+                        </div>
+                        <div className="hero-hud-stat">
+                          <span className="hero-hud-stat-label">Chamber O₂</span>
+                          <span className="hero-hud-stat-val" style={{ color: "var(--ok)" }}>
+                            {heroVideoTarget === "B1" ? "22.2%" : "17.1%"}
+                          </span>
+                        </div>
+                        <div className="hero-hud-stat">
+                          <span className="hero-hud-stat-label">Glovebox CO</span>
+                          <span className="hero-hud-stat-val" style={{ color: "var(--am)" }}>
+                            {heroVideoTarget === "B1" ? "0 → 6 ppm" : "140 → 162 ppm"}
+                          </span>
+                        </div>
+                        <div className="hero-hud-stat">
+                          <span className="hero-hud-stat-label">Flow Speed</span>
+                          <span className="hero-hud-stat-val" style={{ color: "var(--cy)" }}>
+                            {heroVideoTarget === "B1" ? "5.0 cm/s" : "5–10 cm/s"}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Visual Footer Controls */}
+                  <div className="hero-visual-footer">
+                    {heroMediaMode === "transition" ? (
+                      <div className="stage-dots">
+                        <span className="mu" style={{ fontSize: "0.72rem", marginRight: "4px" }}>Stage:</span>
+                        <button
+                          className={`stage-dot-btn ${heroStage === 0 ? "active" : ""}`}
+                          onClick={() => setHeroStage(0)}
+                        >
+                          1. Pre-Ignition (0 px²)
+                        </button>
+                        <button
+                          className={`stage-dot-btn ${heroStage === 1 ? "active" : ""}`}
+                          onClick={() => setHeroStage(1)}
+                        >
+                          2. Active Flame (610 px²)
+                        </button>
+                        <button
+                          className={`stage-dot-btn ${heroStage === 2 ? "active" : ""}`}
+                          onClick={() => setHeroStage(2)}
+                        >
+                          3. CV Extinction Tracking
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="row" style={{ gap: "6px" }}>
+                        <span className="mu" style={{ fontSize: "0.72rem" }}>Select Test:</span>
+                        <button
+                          className={`stage-dot-btn ${heroVideoTarget === "B1" ? "active" : ""}`}
+                          onClick={() => setHeroVideoTarget("B1")}
+                        >
+                          Test B1 (Thin Film)
+                        </button>
+                        <button
+                          className={`stage-dot-btn ${heroVideoTarget === "T22" ? "active" : ""}`}
+                          onClick={() => setHeroVideoTarget("T22")}
+                        >
+                          Test T22 (Fabric)
+                        </button>
+                      </div>
+                    )}
+
+                    <button
+                      className="s"
+                      style={{ fontSize: "0.75rem", padding: "4px 9px", color: "var(--cy)" }}
+                      onClick={() => navigateTo("/flame")}
+                    >
+                      Inspect in Studio ↗
+                    </button>
+                  </div>
+                </div>
               </div>
             </section>
 
