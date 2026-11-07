@@ -9,6 +9,7 @@ import {
   HeroRun,
   EvidenceCard,
 } from "./data";
+import { FLIGHT_VIDEOS, FlightVideo } from "./flightVideos";
 
 export default function FirewiseXApp() {
   const [currentRoute, setCurrentRoute] = useState<string>("/");
@@ -36,6 +37,7 @@ export default function FirewiseXApp() {
   const [selectedVideoUrl, setSelectedVideoUrl] = useState<string>(
     "/videos/BASS_GMT50_SAMPLE_147_TEST_B1.mp4"
   );
+  const [videoFilterQuery, setVideoFilterQuery] = useState<string>("");
   const [threshold, setThreshold] = useState<number>(140);
   const [cvMetrics, setCvMetrics] = useState<{
     area: number;
@@ -48,6 +50,49 @@ export default function FirewiseXApp() {
   } | null>(null);
   const [isSampling, setIsSampling] = useState<boolean>(false);
   const [sampledAreaCurve, setSampledAreaCurve] = useState<number[]>([]);
+
+  // Video catalog helpers
+  const activeFlightVideo = useMemo(() => {
+    return FLIGHT_VIDEOS.find((v) => v.url === selectedVideoUrl) || FLIGHT_VIDEOS[0];
+  }, [selectedVideoUrl]);
+
+  const filteredFlightVideos = useMemo(() => {
+    if (!videoFilterQuery.trim()) return FLIGHT_VIDEOS;
+    const q = videoFilterQuery.toLowerCase();
+    return FLIGHT_VIDEOS.filter(
+      (v) =>
+        v.test_id.toLowerCase().includes(q) ||
+        v.title.toLowerCase().includes(q) ||
+        v.pi.toLowerCase().includes(q) ||
+        v.material.toLowerCase().includes(q) ||
+        v.category.toLowerCase().includes(q)
+    );
+  }, [videoFilterQuery]);
+
+  const videoGroups = useMemo(() => {
+    const groups: Record<string, FlightVideo[]> = {};
+    filteredFlightVideos.forEach((v) => {
+      if (!groups[v.group]) groups[v.group] = [];
+      groups[v.group].push(v);
+    });
+    return groups;
+  }, [filteredFlightVideos]);
+
+  const currentVideoIndex = useMemo(() => {
+    return FLIGHT_VIDEOS.findIndex((v) => v.url === selectedVideoUrl);
+  }, [selectedVideoUrl]);
+
+  const handlePrevVideo = () => {
+    if (currentVideoIndex > 0) {
+      setSelectedVideoUrl(FLIGHT_VIDEOS[currentVideoIndex - 1].url);
+    }
+  };
+
+  const handleNextVideo = () => {
+    if (currentVideoIndex < FLIGHT_VIDEOS.length - 1) {
+      setSelectedVideoUrl(FLIGHT_VIDEOS[currentVideoIndex + 1].url);
+    }
+  };
 
   // Sensor Analytics state
   const [sensorRunIndex, setSensorRunIndex] = useState<number>(0);
@@ -1608,40 +1653,72 @@ export default function FirewiseXApp() {
                     </tr>
                   </thead>
                   <tbody>
-                    {filteredTests.map((t) => (
-                      <tr key={t.test_id}>
-                        <td><b style={{ color: "var(--cy)" }}>{t.test_id}</b></td>
-                        <td className="mu">{t.gmt !== null ? `GMT ${t.gmt}` : "—"}</td>
-                        <td>{t.pi}</td>
-                        <td style={{ maxWidth: "220px", overflow: "hidden", textOverflow: "ellipsis" }}>{t.fuel}</td>
-                        <td><span className="tag tag-cyan">{t.category}</span></td>
-                        <td>{t.o2_initial}%</td>
-                        <td style={{ color: "var(--ok)", fontWeight: 700 }}>{t.o2_final}%</td>
-                        <td>
-                          {t.co_final !== null ? (
-                            <b style={{ color: t.co_final >= 500 ? "var(--danger)" : t.co_final >= 200 ? "var(--am)" : "var(--ok)" }}>
-                              {t.co_final} ppm
-                            </b>
-                          ) : (
-                            <span className="mu">—</span>
-                          )}
-                        </td>
-                        <td>
-                          <span className={t.danger_level.includes("Critical") ? "tag tag-red" : t.danger_level.includes("Elevated") ? "tag tag-amber" : "tag tag-green"}>
-                            {t.danger_level}
-                          </span>
-                        </td>
-                        <td>
-                          <button
-                            className="s"
-                            style={{ padding: "4px 8px", fontSize: "0.75rem" }}
-                            onClick={() => setInspectedTest(t)}
-                          >
-                            Inspect
-                          </button>
-                        </td>
-                      </tr>
-                    ))}
+                    {filteredTests.map((t) => {
+                      const hasFlightVid = FLIGHT_VIDEOS.some(
+                        (v) => !v.isStill && v.test_id.toUpperCase() === t.test_id.toUpperCase()
+                      );
+                      return (
+                        <tr key={t.test_id}>
+                          <td>
+                            <div className="row" style={{ gap: "6px", alignItems: "center" }}>
+                              <b style={{ color: "var(--cy)" }}>{t.test_id}</b>
+                              {hasFlightVid && (
+                                <span
+                                  className="tag tag-cyan"
+                                  style={{
+                                    fontSize: "0.68rem",
+                                    padding: "2px 5px",
+                                    cursor: "pointer",
+                                  }}
+                                  title={`Click to open Test ${t.test_id} flight video in Flame Studio`}
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    const vid = FLIGHT_VIDEOS.find(
+                                      (v) => !v.isStill && v.test_id.toUpperCase() === t.test_id.toUpperCase()
+                                    );
+                                    if (vid) {
+                                      setSelectedVideoUrl(vid.url);
+                                      navigateTo("/flame");
+                                    }
+                                  }}
+                                >
+                                  🎥 Video
+                                </span>
+                              )}
+                            </div>
+                          </td>
+                          <td className="mu">{t.gmt !== null ? `GMT ${t.gmt}` : "—"}</td>
+                          <td>{t.pi}</td>
+                          <td style={{ maxWidth: "220px", overflow: "hidden", textOverflow: "ellipsis" }}>{t.fuel}</td>
+                          <td><span className="tag tag-cyan">{t.category}</span></td>
+                          <td>{t.o2_initial}%</td>
+                          <td style={{ color: "var(--ok)", fontWeight: 700 }}>{t.o2_final}%</td>
+                          <td>
+                            {t.co_final !== null ? (
+                              <b style={{ color: t.co_final >= 500 ? "var(--danger)" : t.co_final >= 200 ? "var(--am)" : "var(--ok)" }}>
+                                {t.co_final} ppm
+                              </b>
+                            ) : (
+                              <span className="mu">—</span>
+                            )}
+                          </td>
+                          <td>
+                            <span className={t.danger_level.includes("Critical") ? "tag tag-red" : t.danger_level.includes("Elevated") ? "tag tag-amber" : "tag tag-green"}>
+                              {t.danger_level}
+                            </span>
+                          </td>
+                          <td>
+                            <button
+                              className="s"
+                              style={{ padding: "4px 8px", fontSize: "0.75rem" }}
+                              onClick={() => setInspectedTest(t)}
+                            >
+                              Inspect
+                            </button>
+                          </td>
+                        </tr>
+                      );
+                    })}
                   </tbody>
                 </table>
               </div>
@@ -1693,6 +1770,43 @@ export default function FirewiseXApp() {
                     </tbody>
                   </table>
 
+                  {/* Launch Video Action Button if Video Available */}
+                  {(() => {
+                    const matchVid = FLIGHT_VIDEOS.find(
+                      (v) => !v.isStill && v.test_id.toUpperCase() === inspectedTest.test_id.toUpperCase()
+                    );
+                    if (!matchVid) return null;
+                    return (
+                      <div style={{ marginTop: "12px", marginBottom: "8px" }}>
+                        <button
+                          style={{
+                            width: "100%",
+                            padding: "10px 14px",
+                            fontSize: "0.88rem",
+                            background: "linear-gradient(135deg, rgba(79, 209, 232, 0.2), rgba(30, 144, 255, 0.35))",
+                            border: "1px solid var(--cy)",
+                            color: "var(--tx-bright)",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            gap: "8px",
+                            borderRadius: "8px",
+                            cursor: "pointer",
+                            fontWeight: 700,
+                            boxShadow: "0 0 16px rgba(79, 209, 232, 0.25)",
+                          }}
+                          onClick={() => {
+                            setSelectedVideoUrl(matchVid.url);
+                            setInspectedTest(null);
+                            navigateTo("/flame");
+                          }}
+                        >
+                          🎥 Open Test {inspectedTest.test_id} Flight Video in Flame Studio (CV) ↗
+                        </button>
+                      </div>
+                    );
+                  })()}
+
                   <div style={{ background: "rgba(5, 10, 20, 0.7)", padding: "12px", borderRadius: "10px", marginTop: "12px", border: "1px solid var(--bd)" }}>
                     <div className="mu" style={{ fontWeight: 700, marginBottom: "4px" }}>Scientific Research Attribution:</div>
                     <p style={{ margin: 0, fontSize: "0.85rem", lineHeight: 1.5 }}>
@@ -1711,26 +1825,112 @@ export default function FirewiseXApp() {
         {currentRoute === "/flame" && (
           <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
             <div className="c c-highlight">
-              <div className="row-between">
+              <div className="row-between" style={{ flexWrap: "wrap", gap: "12px", marginBottom: "14px" }}>
                 <div>
-                  <h1 style={{ margin: 0 }}>Flame Studio (Computer Vision)</h1>
-                  <div className="mu">Real-time Rec.709 Luma segmentation and temporal flame tracking</div>
+                  <div className="row" style={{ gap: "8px", alignItems: "center", flexWrap: "wrap" }}>
+                    <h1 style={{ margin: 0 }}>Flame Studio (Computer Vision)</h1>
+                    <span className="tag tag-cyan" style={{ fontWeight: 700 }}>
+                      📹 84 Spaceflight Recordings
+                    </span>
+                  </div>
+                  <div className="mu" style={{ fontSize: "0.85rem", marginTop: "3px" }}>
+                    Real-time Rec.709 Luma segmentation and temporal flame tracking across 84 real NASA ISS spaceflight recordings
+                  </div>
                 </div>
-                <div className="row">
-                  <select
-                    value={selectedVideoUrl}
-                    onChange={(e) => setSelectedVideoUrl(e.target.value)}
-                    aria-label="Select ISS Video"
+
+                {/* Navigation & Counter */}
+                <div className="row" style={{ gap: "8px", alignItems: "center" }}>
+                  <button
+                    className="s"
+                    onClick={handlePrevVideo}
+                    disabled={currentVideoIndex <= 0}
+                    title="Previous flight video"
+                    style={{ padding: "6px 12px", fontSize: "0.82rem" }}
                   >
-                    <option value="/videos/BASS_GMT50_SAMPLE_147_TEST_B1.mp4">Test B1: Thin PMMA Film (Quenching Limit)</option>
-                    <option value="/videos/BASS_GMT190_SAMPLE_146_TEST_T22.mp4">Test T22: 1 cm SIBAL Fabric (Concurrent Flow)</option>
-                  </select>
+                    ◀ Prev Test
+                  </button>
+                  <span className="mu" style={{ fontSize: "0.82rem", fontWeight: 700 }}>
+                    {currentVideoIndex >= 0 ? `${currentVideoIndex + 1} / ${FLIGHT_VIDEOS.length}` : ""}
+                  </span>
+                  <button
+                    className="s"
+                    onClick={handleNextVideo}
+                    disabled={currentVideoIndex >= FLIGHT_VIDEOS.length - 1}
+                    title="Next flight video"
+                    style={{ padding: "6px 12px", fontSize: "0.82rem" }}
+                  >
+                    Next Test ▶
+                  </button>
                 </div>
               </div>
 
+              {/* Video Selection Controls */}
+              <div className="row" style={{ gap: "10px", flexWrap: "wrap", marginBottom: "12px" }}>
+                <input
+                  type="search"
+                  placeholder="🔍 Filter 84 videos (e.g. B1, T22, Nomex, 100 micron)..."
+                  value={videoFilterQuery}
+                  onChange={(e) => setVideoFilterQuery(e.target.value)}
+                  style={{ flex: "1 1 240px", padding: "8px 12px", fontSize: "0.85rem" }}
+                />
+
+                <select
+                  value={selectedVideoUrl}
+                  onChange={(e) => setSelectedVideoUrl(e.target.value)}
+                  aria-label="Select ISS Spaceflight Video"
+                  style={{ flex: "2 1 360px", padding: "8px 12px", fontSize: "0.85rem", maxWidth: "100%" }}
+                >
+                  {Object.entries(videoGroups).map(([groupName, vids]) => (
+                    <optgroup key={groupName} label={`${groupName} (${vids.length} videos)`}>
+                      {vids.map((v) => (
+                        <option key={v.url} value={v.url}>
+                          {v.title} [{v.sizeMB} MB]
+                        </option>
+                      ))}
+                    </optgroup>
+                  ))}
+                </select>
+              </div>
+
+              {/* Active Video Telemetry Chips */}
+              {activeFlightVideo && (
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    flexWrap: "wrap",
+                    gap: "8px",
+                    padding: "9px 12px",
+                    background: "rgba(4, 9, 20, 0.7)",
+                    borderRadius: "8px",
+                    border: "1px solid var(--bd)",
+                    fontSize: "0.82rem",
+                  }}
+                >
+                  <div className="row" style={{ gap: "8px", flexWrap: "wrap", alignItems: "center" }}>
+                    <span className="tag tag-cyan">Test {activeFlightVideo.test_id}</span>
+                    <span className="tag tag-blue">PI: {activeFlightVideo.pi}</span>
+                    <span className="tag tag-amber">{activeFlightVideo.category}</span>
+                    <span style={{ color: "var(--tx-bright)" }}>
+                      Fuel: <b>{activeFlightVideo.material}</b>
+                    </span>
+                  </div>
+
+                  <div className="row" style={{ gap: "10px", color: "var(--mu)", fontSize: "0.78rem" }}>
+                    {activeFlightVideo.sample && <span>Sample: <b>{activeFlightVideo.sample}</b></span>}
+                    {activeFlightVideo.gmt && <span>GMT: <b>Day {activeFlightVideo.gmt}</b></span>}
+                    <span>Size: <b>{activeFlightVideo.sizeMB} MB</b></span>
+                    <span className={activeFlightVideo.isStill ? "tag tag-amber" : "tag tag-green"} style={{ fontSize: "0.7rem", padding: "2px 6px" }}>
+                      {activeFlightVideo.isStill ? "Burst Sequence" : "Flight Video MP4"}
+                    </span>
+                  </div>
+                </div>
+              )}
+
               {/* Scientific Transparency Callout */}
-              <div className="callout-box" style={{ marginTop: "14px", marginBottom: 0 }}>
-                <p className="mu" style={{ margin: 0 }}>
+              <div className="callout-box" style={{ marginTop: "12px", marginBottom: 0 }}>
+                <p className="mu" style={{ margin: 0, fontSize: "0.82rem" }}>
                   <b style={{ color: "var(--tx-bright)" }}>Scientific Transparency & Calibration Disclosure:</b> Projected flame area is calculated directly from camera sensor pixels ($px^2$). In adherence to the evaluation rubric and literature review, we maintain honest scientific abstention from uncalibrated physical millimeter extrapolation without 3D stereoscopic calibration targets.
                 </p>
               </div>
@@ -1741,8 +1941,13 @@ export default function FirewiseXApp() {
               {/* Native Video Feed */}
               <div className="c">
                 <div className="row-between" style={{ marginBottom: "8px" }}>
-                  <h3 style={{ margin: 0 }}>Native ISS Video Feed</h3>
-                  <span className="tag tag-cyan">H.264 Spaceflight MP4</span>
+                  <div className="row" style={{ gap: "6px", alignItems: "center" }}>
+                    <h3 style={{ margin: 0 }}>Native ISS Video Feed</h3>
+                    <span className="tag tag-cyan">H.264 Spaceflight MP4</span>
+                  </div>
+                  <span className="mu" style={{ fontSize: "0.76rem" }}>
+                    {activeFlightVideo?.fileName}
+                  </span>
                 </div>
                 <video
                   ref={flameVideoRef}
@@ -1752,43 +1957,61 @@ export default function FirewiseXApp() {
                   onTimeUpdate={processCurrentFrame}
                 ></video>
 
-                {/* Quick Scrub Controls */}
-                <div className="row" style={{ marginTop: "12px", gap: "8px" }}>
+                {/* Adaptive Quick Scrub Controls */}
+                <div className="row" style={{ marginTop: "12px", gap: "8px", flexWrap: "wrap" }}>
                   <button
                     className="s"
                     style={{ fontSize: "0.78rem", padding: "5px 10px" }}
                     onClick={() => {
                       if (flameVideoRef.current) {
-                        flameVideoRef.current.currentTime = 2.0;
+                        const dur = flameVideoRef.current.duration || 20;
+                        flameVideoRef.current.currentTime = Math.min(2.0, dur * 0.12);
                         processCurrentFrame();
                       }
                     }}
                   >
-                    ⚡ Ignition (2.0s)
+                    ⚡ Ignition Phase
                   </button>
                   <button
                     className="s"
                     style={{ fontSize: "0.78rem", padding: "5px 10px" }}
                     onClick={() => {
                       if (flameVideoRef.current) {
-                        flameVideoRef.current.currentTime = 8.0;
+                        const dur = flameVideoRef.current.duration || 20;
+                        flameVideoRef.current.currentTime = dur * 0.45;
                         processCurrentFrame();
                       }
                     }}
                   >
-                    🔥 Max Spread (8.0s)
+                    🔥 Max Flame Spread
                   </button>
                   <button
                     className="s"
                     style={{ fontSize: "0.78rem", padding: "5px 10px" }}
                     onClick={() => {
                       if (flameVideoRef.current) {
-                        flameVideoRef.current.currentTime = 14.5;
+                        const dur = flameVideoRef.current.duration || 20;
+                        flameVideoRef.current.currentTime = dur * 0.85;
                         processCurrentFrame();
                       }
                     }}
                   >
-                    💨 Quenching Limit (14.5s)
+                    💨 Quenching / Decay Limit
+                  </button>
+                  <button
+                    className="s"
+                    style={{ fontSize: "0.78rem", padding: "5px 10px", color: "var(--cy)" }}
+                    onClick={() => {
+                      if (flameVideoRef.current) {
+                        if (flameVideoRef.current.paused) {
+                          flameVideoRef.current.play();
+                        } else {
+                          flameVideoRef.current.pause();
+                        }
+                      }
+                    }}
+                  >
+                    ⏯ Play / Pause
                   </button>
                 </div>
               </div>

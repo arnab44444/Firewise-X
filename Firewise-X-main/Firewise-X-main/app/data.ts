@@ -3946,8 +3946,8 @@ export const HERO_RUNS: HeroRun[] = [
     "source_table": "NASA/TM-20210011385 Section 3.2 / Sample 147",
     "co_danger": "Low (<50 ppm)",
     "outcome": "Nomex aramid fabric exhibited high fire resistance. Igniter provoked localized charring but sustained flame spread failed, leaving ambient O₂ and toxic gases virtually unchanged inside the sealed MSG chamber.",
-    "video_url": null,
-    "has_video": false,
+    "video_url": "/videos/BASS_GMT50_SAMPLE_227_TEST_F1.mp4",
+    "has_video": true,
     "telemetry": {
       "time_s": [
         0,
