@@ -478,51 +478,54 @@ export default function PreMissionAssessment({
       ) : (
         /* SCENARIO COMPARISON MATRIX (A vs B vs C) */
         <div className="c">
-          <div className="row-between" style={{ marginBottom: "14px" }}>
+          <div className="row-between" style={{ marginBottom: "14px", flexWrap: "wrap", gap: "8px" }}>
             <div>
               <h3 style={{ margin: 0 }}>Scenario Comparison Matrix (Scenario A vs B vs C)</h3>
               <div className="mu" style={{ fontSize: "0.8rem" }}>Side-by-side evaluation of multiple pre-mission operational envelopes</div>
             </div>
-            <span className="tag tag-amber">3 Active Scenarios</span>
+            <div className="row" style={{ gap: "8px", alignItems: "center" }}>
+              <span className="mu" style={{ fontSize: "0.72rem" }}>👉 Swipe horizontally to inspect all 3 scenarios</span>
+              <span className="tag tag-amber">3 Active Scenarios</span>
+            </div>
           </div>
 
-          <div style={{ overflowX: "auto" }}>
-            <table>
+          <div className="wrap">
+            <table style={{ minWidth: "680px", width: "100%" }}>
               <thead>
                 <tr>
-                  <th>Parameter / Outcome</th>
+                  <th style={{ minWidth: "160px", whiteSpace: "nowrap" }}>Parameter / Outcome</th>
                   {scenarios.map((sc) => (
-                    <th key={sc.id} style={{ color: "var(--cy)", minWidth: "160px" }}>{sc.name}</th>
+                    <th key={sc.id} style={{ color: "var(--cy)", minWidth: "170px", whiteSpace: "nowrap" }}>{sc.name}</th>
                   ))}
                 </tr>
               </thead>
               <tbody>
                 <tr>
-                  <td className="mu">Fuel Material</td>
-                  {scenarios.map((sc) => (<td key={sc.id}><b>{sc.material}</b></td>))}
+                  <td className="mu" style={{ minWidth: "160px", whiteSpace: "nowrap" }}>Fuel Material</td>
+                  {scenarios.map((sc) => (<td key={sc.id} style={{ minWidth: "170px", whiteSpace: "nowrap" }}><b>{sc.material}</b></td>))}
                 </tr>
                 <tr>
-                  <td className="mu">Thickness</td>
-                  {scenarios.map((sc) => (<td key={sc.id}>{sc.thickness_mm} mm</td>))}
+                  <td className="mu" style={{ minWidth: "160px", whiteSpace: "nowrap" }}>Thickness</td>
+                  {scenarios.map((sc) => (<td key={sc.id} style={{ minWidth: "170px", whiteSpace: "nowrap" }}>{sc.thickness_mm} mm</td>))}
                 </tr>
                 <tr>
-                  <td className="mu">Chamber O₂</td>
-                  {scenarios.map((sc) => (<td key={sc.id}>{sc.o2_pct}%</td>))}
+                  <td className="mu" style={{ minWidth: "160px", whiteSpace: "nowrap" }}>Chamber O₂</td>
+                  {scenarios.map((sc) => (<td key={sc.id} style={{ minWidth: "170px", whiteSpace: "nowrap" }}>{sc.o2_pct}%</td>))}
                 </tr>
                 <tr>
-                  <td className="mu">Airflow Speed</td>
-                  {scenarios.map((sc) => (<td key={sc.id}>{sc.flow_speed_cms} cm/s</td>))}
+                  <td className="mu" style={{ minWidth: "160px", whiteSpace: "nowrap" }}>Airflow Speed</td>
+                  {scenarios.map((sc) => (<td key={sc.id} style={{ minWidth: "170px", whiteSpace: "nowrap" }}>{sc.flow_speed_cms} cm/s</td>))}
                 </tr>
                 <tr>
-                  <td className="mu">Environment</td>
-                  {scenarios.map((sc) => (<td key={sc.id} className="tag tag-cyan" style={{ fontSize: "0.72rem" }}>{sc.gravity_env}</td>))}
+                  <td className="mu" style={{ minWidth: "160px", whiteSpace: "nowrap" }}>Environment</td>
+                  {scenarios.map((sc) => (<td key={sc.id} style={{ minWidth: "170px", whiteSpace: "nowrap" }}><span className="tag tag-cyan" style={{ fontSize: "0.72rem" }}>{sc.gravity_env}</span></td>))}
                 </tr>
                 <tr style={{ background: "rgba(79, 209, 232, 0.08)" }}>
-                  <td style={{ fontWeight: 700, color: "var(--tx-bright)" }}>Predicted State</td>
+                  <td style={{ fontWeight: 700, color: "var(--tx-bright)", minWidth: "160px", whiteSpace: "nowrap" }}>Predicted State</td>
                   {scenarios.map((sc) => {
                     const res = computeScenarioResult(sc);
                     return (
-                      <td key={sc.id}>
+                      <td key={sc.id} style={{ minWidth: "170px", whiteSpace: "nowrap" }}>
                         <b style={{ color: res.danger.includes("Critical") ? "var(--danger)" : res.danger.includes("Low") ? "var(--ok)" : "var(--am)" }}>
                           {res.state}
                         </b>
@@ -531,11 +534,11 @@ export default function PreMissionAssessment({
                   })}
                 </tr>
                 <tr>
-                  <td style={{ fontWeight: 700, color: "var(--tx-bright)" }}>Peak Toxic CO</td>
+                  <td style={{ fontWeight: 700, color: "var(--tx-bright)", minWidth: "160px", whiteSpace: "nowrap" }}>Peak Toxic CO</td>
                   {scenarios.map((sc) => {
                     const res = computeScenarioResult(sc);
                     return (
-                      <td key={sc.id}>
+                      <td key={sc.id} style={{ minWidth: "170px", whiteSpace: "nowrap" }}>
                         <span className={res.danger.includes("Critical") ? "tag tag-red" : res.danger.includes("Low") ? "tag tag-green" : "tag tag-amber"}>
                           {res.co} ppm ({res.danger})
                         </span>

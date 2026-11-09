@@ -1013,6 +1013,12 @@ table {
   white-space: nowrap;
 }
 
+.wrap table th,
+.wrap table td {
+  white-space: nowrap;
+  word-break: normal;
+}
+
 table:not(.wrap table) {
   white-space: normal;
   table-layout: auto;
@@ -1021,7 +1027,7 @@ table:not(.wrap table) {
 table:not(.wrap table) td,
 table:not(.wrap table) th {
   white-space: normal;
-  word-break: break-word;
+  word-break: normal;
   overflow-wrap: break-word;
 }
 
