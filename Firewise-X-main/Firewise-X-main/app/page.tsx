@@ -4,10 +4,8 @@ import React, { useState, useEffect, useMemo, useRef } from "react";
 import {
   ALL_TESTS,
   HERO_RUNS,
-  EVIDENCE_CARDS,
   BassTest,
   HeroRun,
-  EvidenceCard,
 } from "./data";
 import { FLIGHT_VIDEOS, FlightVideo } from "./flightVideos";
 import PreMissionAssessment from "./components/PreMissionAssessment";
@@ -1517,34 +1515,6 @@ export default function FirewiseXApp() {
                   </p>
                 </div>
               </div>
-            </div>
-
-            {/* Supporting Evidence Cards */}
-            <h3 style={{ marginTop: "14px" }}>Supporting NASA Publications & Evidence Cards</h3>
-            <div className="g-3">
-              {EVIDENCE_CARDS.filter((card) => currentHero.evidence_ids.includes(card.id)).map((card) => (
-                <div key={card.id} className="c" style={{ display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
-                  <div>
-                    <span className="tag tag-cyan">{card.category}</span>
-                    <h4 style={{ margin: "10px 0 6px", color: "var(--tx-bright)", fontSize: "0.98rem" }}>{card.title}</h4>
-                    <div className="mu" style={{ fontSize: "0.8rem" }}>{card.authors} ({card.year})</div>
-                    <p style={{ fontSize: "0.86rem", margin: "10px 0 8px" }}><b>Key Finding:</b> {card.key_finding}</p>
-                    <div style={{ background: "rgba(5, 10, 20, 0.7)", padding: "10px", borderRadius: "8px", border: "1px solid var(--bd)" }}>
-                      <p style={{ margin: "0 0 6px", fontSize: "0.82rem", color: "var(--ok)" }}>
-                        <b>Supports:</b> {card.supports}
-                      </p>
-                      <p style={{ margin: 0, fontSize: "0.82rem", color: "var(--am)" }}>
-                        <b>Honest Limits:</b> {card.limitations}
-                      </p>
-                    </div>
-                  </div>
-                  <div style={{ marginTop: "14px", paddingTop: "10px", borderTop: "1px solid var(--bd)" }}>
-                    <a href={card.url} target="_blank" rel="noopener noreferrer" className="btn s" style={{ width: "100%", fontSize: "0.82rem" }}>
-                      Read NASA Paper (DOI: {card.doi}) ↗
-                    </a>
-                  </div>
-                </div>
-              ))}
             </div>
           </div>
         )}
