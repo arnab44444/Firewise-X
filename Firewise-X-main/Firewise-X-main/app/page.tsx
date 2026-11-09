@@ -10,6 +10,8 @@ import {
   EvidenceCard,
 } from "./data";
 import { FLIGHT_VIDEOS, FlightVideo } from "./flightVideos";
+import PreMissionAssessment from "./components/PreMissionAssessment";
+import AstronautAssistant from "./components/AstronautAssistant";
 
 export default function FirewiseXApp() {
   const [currentRoute, setCurrentRoute] = useState<string>("/");
@@ -128,7 +130,7 @@ export default function FirewiseXApp() {
 
     const handleResize = () => {
       setWindowWidth(window.innerWidth);
-      if (window.innerWidth > 980) {
+      if (window.innerWidth > 1100) {
         setIsMobileMenuOpen(false);
       }
     };
@@ -152,6 +154,21 @@ export default function FirewiseXApp() {
   const navigateTo = (path: string) => {
     window.location.hash = `#${path}`;
     setIsMobileMenuOpen(false);
+  };
+
+  const handleNavigateToTest = (testId: string) => {
+    const match = ALL_TESTS.find(
+      (t) => t.test_id.toLowerCase() === testId.toLowerCase()
+    );
+    if (match) {
+      setInspectedTest(match);
+    }
+    navigateTo("/exp");
+  };
+
+  const handleNavigateToFlame = (videoUrl: string) => {
+    setSelectedVideoUrl(videoUrl);
+    navigateTo("/flame");
   };
 
   const currentHero = HERO_RUNS[selectedHeroIndex] || HERO_RUNS[0];
@@ -869,19 +886,25 @@ export default function FirewiseXApp() {
               <span>🚀</span> Mission Control
             </a>
             <a onClick={() => navigateTo("/exp")} className={currentRoute === "/exp" ? "on" : ""}>
-              <span>📊</span> 129 Tests Explorer
+              <span>📊</span> 129 Tests
+            </a>
+            <a onClick={() => navigateTo("/assessment")} className={currentRoute === "/assessment" ? "on" : ""}>
+              <span>📋</span> Assessment
+            </a>
+            <a onClick={() => navigateTo("/assistant")} className={currentRoute === "/assistant" ? "on" : ""}>
+              <span>🤖</span> Astronaut AI
             </a>
             <a onClick={() => navigateTo("/flame")} className={currentRoute === "/flame" ? "on" : ""}>
-              <span>🎥</span> Flame Studio (CV)
+              <span>🎥</span> Flame Studio
             </a>
             <a onClick={() => navigateTo("/sensor")} className={currentRoute === "/sensor" ? "on" : ""}>
-              <span>📈</span> Sensors & Anomaly
+              <span>📈</span> Sensors
             </a>
             <a onClick={() => navigateTo("/evid")} className={currentRoute === "/evid" ? "on" : ""}>
-              <span>📚</span> Evidence Engine
+              <span>📚</span> Evidence
             </a>
             <a onClick={() => navigateTo("/cmp")} className={currentRoute === "/cmp" ? "on" : ""}>
-              <span>⚖️</span> Compare Runs
+              <span>⚖️</span> Compare
             </a>
           </div>
 
@@ -932,6 +955,20 @@ export default function FirewiseXApp() {
                   <div className="item-text">
                     <span className="item-title">129 Tests Explorer</span>
                     <span className="item-desc">Filterable database of all flight runs</span>
+                  </div>
+                </a>
+                <a onClick={() => navigateTo("/assessment")} className={`mobile-nav-item ${currentRoute === "/assessment" ? "on" : ""}`}>
+                  <span className="item-icon">📋</span>
+                  <div className="item-text">
+                    <span className="item-title">Pre-Mission Assessment</span>
+                    <span className="item-desc">Combustion state predictor & 3-way scenario matrix</span>
+                  </div>
+                </a>
+                <a onClick={() => navigateTo("/assistant")} className={`mobile-nav-item ${currentRoute === "/assistant" ? "on" : ""}`}>
+                  <span className="item-icon">🤖</span>
+                  <div className="item-text">
+                    <span className="item-title">Astronaut AI Assistant</span>
+                    <span className="item-desc">NASA TM-grounded safety advisor & audio read-aloud</span>
                   </div>
                 </a>
                 <a onClick={() => navigateTo("/flame")} className={`mobile-nav-item ${currentRoute === "/flame" ? "on" : ""}`}>
@@ -1004,8 +1041,10 @@ export default function FirewiseXApp() {
                     and peer-reviewed NASA literature into one traceable research engine.
                   </p>
 
-                  <div className="row" style={{ gap: "10px", marginBottom: "18px" }}>
+                  <div className="row" style={{ gap: "10px", marginBottom: "18px", flexWrap: "wrap" }}>
                     <button onClick={() => navigateTo("/mc")}>🚀 Launch Mission Control</button>
+                    <button className="s" onClick={() => navigateTo("/assessment")}>📋 Pre-Mission Assessment</button>
+                    <button className="s" onClick={() => navigateTo("/assistant")}>🤖 Astronaut AI Assistant</button>
                     <button className="s" onClick={() => navigateTo("/flame")}>🎥 Analyze ISS Video (CV)</button>
                     <button className="s" onClick={() => navigateTo("/exp")}>📊 Explore 129 Flight Tests</button>
                   </div>
@@ -1181,7 +1220,7 @@ export default function FirewiseXApp() {
               </div>
               <div className="stat-box">
                 <div style={{ fontSize: "1.5rem", marginBottom: "4px" }}>📹</div>
-                <div className="stat-num" style={{ color: "var(--am)" }}>2</div>
+                <div className="stat-num" style={{ color: "var(--am)" }}>{FLIGHT_VIDEOS.length}</div>
                 <div className="stat-label">Flight Videos Loaded</div>
               </div>
               <div className="stat-box">
@@ -1266,6 +1305,53 @@ export default function FirewiseXApp() {
                 </p>
               </div>
             </div>
+
+            {/* Operational Decision Tools Showcase */}
+            <section className="c" style={{ background: "rgba(10, 20, 42, 0.75)", border: "1px solid var(--bd)" }}>
+              <div className="row-between" style={{ marginBottom: "16px", flexWrap: "wrap", gap: "10px" }}>
+                <div>
+                  <h2 style={{ margin: 0 }}>Operational Mission Safety Modules</h2>
+                  <div className="mu">Blueprint Modules 3 & 4: Physics-based prediction and conversational crew support</div>
+                </div>
+                <span className="tag tag-cyan">NASA TM-20210011385 Grounded</span>
+              </div>
+
+              <div className="g-2">
+                {/* Module 3 Card */}
+                <div className="c" style={{ background: "rgba(5, 12, 28, 0.85)", border: "1px solid rgba(79, 209, 232, 0.35)", display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
+                  <div>
+                    <div className="row-between" style={{ marginBottom: "12px" }}>
+                      <span className="tag tag-cyan">Module 3 Engine</span>
+                      <span className="mu" style={{ fontSize: "0.76rem" }}>Parametric & Multi-Scenario</span>
+                    </div>
+                    <h3 style={{ margin: "0 0 8px", color: "var(--tx-bright)" }}>📋 Pre-Mission Combustion Assessment</h3>
+                    <p className="mu" style={{ fontSize: "0.86rem", lineHeight: 1.6, margin: "0 0 16px" }}>
+                      Simulate arbitrary mission environments (fuel thickness, O₂ concentration, flow speed, gravity environment). Predicts flame spread regime, peak toxic CO emissions, O₂ consumption, and compares 3 mission scenarios side-by-side.
+                    </p>
+                  </div>
+                  <button onClick={() => navigateTo("/assessment")} style={{ alignSelf: "flex-start" }}>
+                    Launch Assessment Engine ↗
+                  </button>
+                </div>
+
+                {/* Module 4 Card */}
+                <div className="c" style={{ background: "rgba(5, 12, 28, 0.85)", border: "1px solid rgba(168, 85, 247, 0.35)", display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
+                  <div>
+                    <div className="row-between" style={{ marginBottom: "12px" }}>
+                      <span className="tag tag-purple">Module 4 Intelligence</span>
+                      <span className="mu" style={{ fontSize: "0.76rem" }}>Speech & Zero-Hallucination</span>
+                    </div>
+                    <h3 style={{ margin: "0 0 8px", color: "var(--tx-bright)" }}>🤖 Astronaut AI Assistant</h3>
+                    <p className="mu" style={{ fontSize: "0.86rem", lineHeight: 1.6, margin: "0 0 16px" }}>
+                      Domain-specific microgravity fire safety co-pilot. Delivers instantaneous physics explanations, flight test citations, toxic threshold warnings, and actionable crew safety procedures with built-in voice read-aloud.
+                    </p>
+                  </div>
+                  <button className="s" onClick={() => navigateTo("/assistant")} style={{ alignSelf: "flex-start", color: "var(--purple)", borderColor: "rgba(168, 85, 247, 0.45)" }}>
+                    Open Astronaut AI Co-Pilot ↗
+                  </button>
+                </div>
+              </div>
+            </section>
           </div>
         )}
 
@@ -2351,6 +2437,26 @@ export default function FirewiseXApp() {
               </table>
             </div>
           </div>
+        )}
+
+        {/* ========================================================= */}
+        {/* TAB 8: PRE-MISSION ASSESSMENT ENGINE */}
+        {/* ========================================================= */}
+        {currentRoute === "/assessment" && (
+          <PreMissionAssessment
+            onNavigateToTest={handleNavigateToTest}
+            onNavigateToFlame={handleNavigateToFlame}
+          />
+        )}
+
+        {/* ========================================================= */}
+        {/* TAB 9: ASTRONAUT AI ASSISTANT */}
+        {/* ========================================================= */}
+        {currentRoute === "/assistant" && (
+          <AstronautAssistant
+            onNavigateToTest={handleNavigateToTest}
+            onNavigateToFlame={handleNavigateToFlame}
+          />
         )}
       </main>
 
