@@ -34,6 +34,8 @@ export default function FirewiseXApp() {
   const [selectedRestrictor, setSelectedRestrictor] = useState<string>("ALL");
   const [viewMode, setViewMode] = useState<"table" | "cards">("table");
   const [inspectedTest, setInspectedTest] = useState<BassTest | null>(null);
+  const [currentPage, setCurrentPage] = useState<number>(1);
+  const PAGE_SIZE = 10;
 
   // Flame Studio state
   const [selectedVideoUrl, setSelectedVideoUrl] = useState<string>(
@@ -797,6 +799,18 @@ export default function FirewiseXApp() {
       return matchQuery && matchPi && matchCat && matchDanger && matchRestr;
     });
   }, [searchQuery, selectedPi, selectedCategory, selectedDanger, selectedRestrictor]);
+
+  // Reset to first page whenever search filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery, selectedPi, selectedCategory, selectedDanger, selectedRestrictor]);
+
+  const totalPages = Math.max(1, Math.ceil(filteredTests.length / PAGE_SIZE));
+
+  const paginatedTests = useMemo(() => {
+    const start = (currentPage - 1) * PAGE_SIZE;
+    return filteredTests.slice(start, start + PAGE_SIZE);
+  }, [filteredTests, currentPage]);
 
   const uniquePis = useMemo(() => {
     return Array.from(new Set(ALL_TESTS.map((t) => t.pi)));
@@ -1584,7 +1598,9 @@ export default function FirewiseXApp() {
                   <div className="mu">Official Physical Sciences Informatics (PSI-25) flight test catalog</div>
                 </div>
                 <div className="row">
-                  <span className="tag tag-cyan">Showing {filteredTests.length} of {ALL_TESTS.length} tests</span>
+                  <span className="tag tag-cyan">
+                    Page {currentPage} of {totalPages} ({filteredTests.length} tests)
+                  </span>
                   <button
                     className="s"
                     onClick={() => setViewMode(viewMode === "table" ? "cards" : "table")}
@@ -1673,10 +1689,32 @@ export default function FirewiseXApp() {
               </div>
             </div>
 
+            {/* EMPTY STATE */}
+            {filteredTests.length === 0 && (
+              <div className="c" style={{ textAlign: "center", padding: "40px 20px" }}>
+                <div style={{ fontSize: "2.2rem", marginBottom: "8px" }}>🔍</div>
+                <h3 style={{ margin: "0 0 6px" }}>No Matching Flight Tests Found</h3>
+                <p className="mu" style={{ margin: "0 0 16px", fontSize: "0.86rem" }}>
+                  No tests matched your current filter or search criteria.
+                </p>
+                <button
+                  className="s"
+                  onClick={() => {
+                    setSelectedDanger("ALL");
+                    setSelectedCategory("ALL");
+                    setSelectedPi("ALL");
+                    setSearchQuery("");
+                  }}
+                >
+                  Reset All Filters
+                </button>
+              </div>
+            )}
+
             {/* CARDS VIEW */}
-            {viewMode === "cards" && (
+            {viewMode === "cards" && filteredTests.length > 0 && (
               <div className="g" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 280px), 1fr))" }}>
-                {filteredTests.map((t) => (
+                {paginatedTests.map((t) => (
                   <div
                     key={t.test_id}
                     className="c"
@@ -1721,7 +1759,7 @@ export default function FirewiseXApp() {
             )}
 
             {/* TABLE VIEW */}
-            {viewMode === "table" && (
+            {viewMode === "table" && filteredTests.length > 0 && (
               <div className="wrap">
                 <table>
                   <thead>
@@ -1739,7 +1777,7 @@ export default function FirewiseXApp() {
                     </tr>
                   </thead>
                   <tbody>
-                    {filteredTests.map((t) => {
+                    {paginatedTests.map((t) => {
                       const hasFlightVid = FLIGHT_VIDEOS.some(
                         (v) => !v.isStill && v.test_id.toUpperCase() === t.test_id.toUpperCase()
                       );
@@ -1807,6 +1845,158 @@ export default function FirewiseXApp() {
                     })}
                   </tbody>
                 </table>
+              </div>
+            )}
+
+            {/* PAGINATION TOOLBAR (10 items per page) */}
+            {totalPages > 1 && (
+              <div
+                className="c"
+                style={{
+                  padding: "12px 18px",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  flexWrap: "wrap",
+                  gap: "12px",
+                }}
+              >
+                <div className="mu" style={{ fontSize: "0.82rem" }}>
+                  Showing{" "}
+                  <b style={{ color: "var(--tx-bright)" }}>
+                    {(currentPage - 1) * PAGE_SIZE + 1}–
+                    {Math.min(currentPage * PAGE_SIZE, filteredTests.length)}
+                  </b>{" "}
+                  of <b style={{ color: "var(--tx-bright)" }}>{filteredTests.length}</b> flight tests
+                  {" "}(10 per page)
+                </div>
+
+                <div className="row" style={{ gap: "6px", alignItems: "center", flexWrap: "wrap" }}>
+                  <button
+                    className="s"
+                    disabled={currentPage === 1}
+                    onClick={() => {
+                      setCurrentPage(1);
+                      window.scrollTo({ top: 180, behavior: "smooth" });
+                    }}
+                    style={{
+                      padding: "5px 10px",
+                      fontSize: "0.78rem",
+                      opacity: currentPage === 1 ? 0.35 : 1,
+                      cursor: currentPage === 1 ? "not-allowed" : "pointer",
+                    }}
+                    title="First Page"
+                  >
+                    « First
+                  </button>
+
+                  <button
+                    className="s"
+                    disabled={currentPage === 1}
+                    onClick={() => {
+                      setCurrentPage((p) => Math.max(1, p - 1));
+                      window.scrollTo({ top: 180, behavior: "smooth" });
+                    }}
+                    style={{
+                      padding: "5px 10px",
+                      fontSize: "0.78rem",
+                      opacity: currentPage === 1 ? 0.35 : 1,
+                      cursor: currentPage === 1 ? "not-allowed" : "pointer",
+                    }}
+                    title="Previous Page"
+                  >
+                    ‹ Prev
+                  </button>
+
+                  {/* Page Number Pills */}
+                  {Array.from({ length: totalPages }, (_, i) => i + 1)
+                    .filter((p) => {
+                      if (p === 1 || p === totalPages) return true;
+                      if (Math.abs(p - currentPage) <= 2) return true;
+                      return false;
+                    })
+                    .reduce<(number | string)[]>((acc, p, idx, arr) => {
+                      if (idx > 0 && (p as number) - (arr[idx - 1] as number) > 1) {
+                        acc.push(`ellipsis-${p}`);
+                      }
+                      acc.push(p);
+                      return acc;
+                    }, [])
+                    .map((item) => {
+                      if (typeof item === "string") {
+                        return (
+                          <span
+                            key={item}
+                            className="mu"
+                            style={{ padding: "0 4px", fontSize: "0.85rem", userSelect: "none" }}
+                          >
+                            …
+                          </span>
+                        );
+                      }
+                      const pageNum = item as number;
+                      const isActive = pageNum === currentPage;
+                      return (
+                        <button
+                          key={pageNum}
+                          onClick={() => {
+                            setCurrentPage(pageNum);
+                            window.scrollTo({ top: 180, behavior: "smooth" });
+                          }}
+                          style={{
+                            padding: "4px 10px",
+                            fontSize: "0.78rem",
+                            borderRadius: "6px",
+                            fontWeight: isActive ? 800 : 500,
+                            background: isActive ? "var(--cy)" : "rgba(255, 255, 255, 0.05)",
+                            color: isActive ? "#040b18" : "var(--mu)",
+                            border: isActive ? "1px solid var(--cy)" : "1px solid var(--bd)",
+                            cursor: "pointer",
+                            minWidth: "32px",
+                            textAlign: "center",
+                          }}
+                        >
+                          {pageNum}
+                        </button>
+                      );
+                    })}
+
+                  <button
+                    className="s"
+                    disabled={currentPage === totalPages}
+                    onClick={() => {
+                      setCurrentPage((p) => Math.min(totalPages, p + 1));
+                      window.scrollTo({ top: 180, behavior: "smooth" });
+                    }}
+                    style={{
+                      padding: "5px 10px",
+                      fontSize: "0.78rem",
+                      opacity: currentPage === totalPages ? 0.35 : 1,
+                      cursor: currentPage === totalPages ? "not-allowed" : "pointer",
+                    }}
+                    title="Next Page"
+                  >
+                    Next ›
+                  </button>
+
+                  <button
+                    className="s"
+                    disabled={currentPage === totalPages}
+                    onClick={() => {
+                      setCurrentPage(totalPages);
+                      window.scrollTo({ top: 180, behavior: "smooth" });
+                    }}
+                    style={{
+                      padding: "5px 10px",
+                      fontSize: "0.78rem",
+                      opacity: currentPage === totalPages ? 0.35 : 1,
+                      cursor: currentPage === totalPages ? "not-allowed" : "pointer",
+                    }}
+                    title="Last Page"
+                  >
+                    Last »
+                  </button>
+                </div>
               </div>
             )}
 
