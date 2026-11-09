@@ -398,8 +398,17 @@ main {
 
 @media (max-width: 960px) {
   .hero-grid {
-    grid-template-columns: 1fr;
+    display: flex;
+    flex-direction: column;
     gap: 24px;
+  }
+  .hero-visual-card {
+    order: 1;
+    width: 100%;
+  }
+  .hero-text-col {
+    order: 2;
+    width: 100%;
   }
 }
 

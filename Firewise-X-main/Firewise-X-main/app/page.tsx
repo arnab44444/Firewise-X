@@ -1030,7 +1030,7 @@ export default function FirewiseXApp() {
             <section className="c c-highlight" style={{ padding: "clamp(20px, 3.8vw, 36px)" }}>
               <div className="hero-grid">
                 {/* Left Column: Narrative & Action CTAs */}
-                <div>
+                <div className="hero-text-col">
                   <div className="row" style={{ marginBottom: "12px", gap: "8px" }}>
                     <span className="tag tag-cyan">🛰️ Real NASA ISS Flight Data Connected</span>
                     <span className="tag tag-amber">DOI: 10.60555/4qc4-de67</span>
