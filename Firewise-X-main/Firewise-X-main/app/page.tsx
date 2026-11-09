@@ -108,10 +108,6 @@ export default function FirewiseXApp() {
   const [compareA, setCompareA] = useState<number>(0); // B1
   const [compareB, setCompareB] = useState<number>(1); // M5
 
-  // Evidence state
-  const [evidenceFilter, setEvidenceFilter] = useState<string>("ALL");
-  const [evidenceSearch, setEvidenceSearch] = useState<string>("");
-
   // Canvas Refs
   const flameVideoRef = useRef<HTMLVideoElement | null>(null);
   const flameCanvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -816,29 +812,6 @@ export default function FirewiseXApp() {
     return Array.from(new Set(ALL_TESTS.map((t) => t.pi)));
   }, []);
 
-  // Detect unanswerable queries (e.g. Lunar/Mars/Cabin exposure) for Honest Abstention
-  const isUnanswerableQuery = useMemo(() => {
-    const q = evidenceSearch.toLowerCase().trim();
-    return q.includes("lunar") || q.includes("moon") || q.includes("mars") || q.includes("cabin exposure") || q.includes("crew cabin") || q.includes("partial gravity");
-  }, [evidenceSearch]);
-
-  const filteredEvidence = useMemo(() => {
-    return EVIDENCE_CARDS.filter((e) => {
-      const matchCat =
-        evidenceFilter === "ALL" ||
-        e.category === evidenceFilter ||
-        e.category.toLowerCase().includes(evidenceFilter.toLowerCase().replace(" limits", "").replace(" boundary", ""));
-      const q = evidenceSearch.toLowerCase().trim();
-      const matchQ =
-        !q ||
-        e.title.toLowerCase().includes(q) ||
-        e.authors.toLowerCase().includes(q) ||
-        e.key_finding.toLowerCase().includes(q) ||
-        e.supports.toLowerCase().includes(q);
-      return matchCat && matchQ;
-    });
-  }, [evidenceFilter, evidenceSearch]);
-
   const exportTelemetryCsv = () => {
     const r = currentHero;
     let csv = `# ========================================================================\n`;
@@ -913,9 +886,6 @@ export default function FirewiseXApp() {
             </a>
             <a onClick={() => navigateTo("/sensor")} className={currentRoute === "/sensor" ? "on" : ""}>
               <span>📈</span> Sensors
-            </a>
-            <a onClick={() => navigateTo("/evid")} className={currentRoute === "/evid" ? "on" : ""}>
-              <span>📚</span> Evidence
             </a>
             <a onClick={() => navigateTo("/cmp")} className={currentRoute === "/cmp" ? "on" : ""}>
               <span>⚖️</span> Compare
@@ -997,13 +967,6 @@ export default function FirewiseXApp() {
                   <div className="item-text">
                     <span className="item-title">Sensors & Anomaly</span>
                     <span className="item-desc">Statistical Z-score & threshold detection</span>
-                  </div>
-                </a>
-                <a onClick={() => navigateTo("/evid")} className={`mobile-nav-item ${currentRoute === "/evid" ? "on" : ""}`}>
-                  <span className="item-icon">📚</span>
-                  <div className="item-text">
-                    <span className="item-title">Evidence Engine</span>
-                    <span className="item-desc">Peer-reviewed literature & NASA TM mapping</span>
                   </div>
                 </a>
                 <a onClick={() => navigateTo("/cmp")} className={`mobile-nav-item ${currentRoute === "/cmp" ? "on" : ""}`}>
